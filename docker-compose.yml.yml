@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    image: php:8.2-cli
+    container_name: alumni_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: php -S 0.0.0.0:8000
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: alumni_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: alumni_db
+      POSTGRES_USER: alumni_user
+      POSTGRES_PASSWORD: alumni_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
