@@ -9,7 +9,7 @@ services:
     volumes:
       - .:/var/www/html
     working_dir: /var/www/html
-    command: php -S 0.0.0.0:8000
+    command: php -S 0.0.0.0:8000 index.php
     depends_on:
       - db
 
