@@ -547,6 +547,92 @@ if ($path === '/api/users') {
 }
 
 // -------------------------------------------------------------
+// Week 03 - Step 5: PUT / PATCH /api/users/{id} -> Update user
+// -------------------------------------------------------------
+if (preg_match('#^/api/users/([^/]+)$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $id = $matches[1];
+
+    // PUT or PATCH: Update user
+    if ($method === 'PUT' || $method === 'PATCH') {
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+
+        // If not JSON, try parsing form-urlencoded
+        if (!$data) {
+            parse_str($rawInput, $data);
+        }
+
+        // Fallback to $_POST if sent via form
+        if ((!$data || empty($data)) && !empty($_POST)) {
+            $data = $_POST;
+        }
+
+        if (!$data || !is_array($data)) {
+            http_response_code(400);
+            echo json_encode([
+                'error' => 'Bad Request',
+                'message' => 'Lütfen güncellenecek alanları JSON veya form verisi olarak gönderin.'
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $users = getUsersList();
+        $userIndex = -1;
+
+        foreach ($users as $index => $u) {
+            if (isset($u['id']) && (string)$u['id'] === (string)$id) {
+                $userIndex = $index;
+                break;
+            }
+        }
+
+        if ($userIndex === -1) {
+            http_response_code(404);
+            echo json_encode([
+                'error' => 'Not Found',
+                'message' => "ID {$id} olan kullanıcı bulunamadı."
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Update user fields
+        foreach ($data as $k => $v) {
+            if ($k === 'id') continue; // ID değiştirilmez
+            $users[$userIndex][$k] = $v;
+        }
+        $users[$userIndex]['updatedAt'] = date('c');
+
+        // Save to file
+        $file = __DIR__ . '/data/users.json';
+        file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+        http_response_code(200);
+        echo json_encode($users[$userIndex], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // GET single user: /api/users/{id}
+    if ($method === 'GET') {
+        $users = getUsersList();
+        foreach ($users as $u) {
+            if (isset($u['id']) && (string)$u['id'] === (string)$id) {
+                http_response_code(200);
+                echo json_encode($u, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+
+        http_response_code(404);
+        echo json_encode([
+            'error' => 'Not Found',
+            'message' => "ID {$id} olan kullanıcı bulunamadı."
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// -------------------------------------------------------------
 // Week 02 - Step 6: GET /about -> Temporary about page
 // -------------------------------------------------------------
 if ($path === '/about') {
