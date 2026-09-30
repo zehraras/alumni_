@@ -238,6 +238,11 @@ if ($path === '/') {
                 </div>
                 <div class="route-item">
                     <span class="route-method">GET</span>
+                    <a href="{$prefix}/api/health" class="route-path">/api/health</a>
+                    <span class="route-desc">Returns JSON {"status": "ok"}</span>
+                </div>
+                <div class="route-item">
+                    <span class="route-method">GET</span>
                     <a href="{$prefix}/sum/15/27" class="route-path">/sum/15/27</a>
                     <span class="route-desc">Returns sum of two numbers (42)</span>
                 </div>
@@ -276,6 +281,17 @@ if ($path === '/about') {
         </div>
 HTML;
     echo renderLayout("About", $content, $prefix);
+    exit;
+}
+
+// -------------------------------------------------------------
+// Week 03 - Step 1: GET /api/health -> JSON
+// -------------------------------------------------------------
+if ($path === '/api/health') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'status' => 'ok'
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
