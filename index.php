@@ -382,6 +382,11 @@ if ($path === '/') {
                     <a href="{$prefix}/api/health" class="route-path">/api/health</a>
                     <span class="route-desc">JSON durum kontrolü {"status": "ok"}</span>
                 </div>
+                <div class="route-item" style="border-left: 3px solid #f59e0b;">
+                    <span class="route-method" style="background: #f59e0b; color: white;">GET (DOCS)</span>
+                    <a href="{$prefix}/api/swagger" class="route-path" style="color: #d97706;">/api/swagger</a>
+                    <span class="route-desc"><strong>YENİ:</strong> Otomatik API Dokümantasyonu (Swagger)</span>
+                </div>
                 <div class="route-item">
                     <span class="route-method">POST (API)</span>
                     <a href="{$prefix}/api/users" class="route-path">/api/users</a>
@@ -657,6 +662,72 @@ if ($path === '/api/health') {
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
+
+// -------------------------------------------------------------
+// Week 03 - Step 7: GET /api/swagger -> API Documentation
+// -------------------------------------------------------------
+if ($path === '/api/swagger') {
+    header('Content-Type: application/json; charset=utf-8');
+    
+    $swaggerDoc = [
+        'openapi' => '3.0.0',
+        'info' => [
+            'title' => 'Alumni System API',
+            'description' => 'Mezun takip sistemi API dokümantasyonu. Bu doküman otomatik olarak güncellenir (Week 3 - Step 7).',
+            'version' => '1.0.0'
+        ],
+        'paths' => [
+            '/api/health' => [
+                'get' => [
+                    'summary' => 'Sistem sağlık durumu kontrolü',
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Sistem çalışıyor',
+                            'content' => ['application/json' => ['example' => ['status' => 'ok']]]
+                        ]
+                    ]
+                ]
+            ],
+            '/api/users' => [
+                'get' => [
+                    'summary' => 'Tüm mezunları listele',
+                    'responses' => ['200' => ['description' => 'Mezun listesi (JSON array)']]
+                ],
+                'post' => [
+                    'summary' => 'Yeni mezun ekle',
+                    'description' => 'Dinamik alanlar kabul edilir (İsim, Soyisim, vb.)',
+                    'responses' => ['201' => ['description' => 'Başarıyla oluşturuldu']]
+                ]
+            ],
+            '/api/users/{id}' => [
+                'get' => [
+                    'summary' => 'ID\'ye göre tekil mezun getir',
+                    'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                    'responses' => ['200' => ['description' => 'Mezun detayı']]
+                ],
+                'put' => [
+                    'summary' => 'Mezun bilgilerini güncelle',
+                    'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                    'responses' => ['200' => ['description' => 'Güncellenmiş mezun detayı']]
+                ],
+                'patch' => [
+                    'summary' => 'Mezun bilgilerini kısmi güncelle',
+                    'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                    'responses' => ['200' => ['description' => 'Güncellenmiş mezun detayı']]
+                ],
+                'delete' => [
+                    'summary' => 'Mezun sil',
+                    'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                    'responses' => ['200' => ['description' => 'Başarıyla silindi']]
+                ]
+            ]
+        ]
+    ];
+    
+    echo json_encode($swaggerDoc, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 
 // -------------------------------------------------------------
 // Week 03 - Step 3: POST & GET /api/users -> JSON
