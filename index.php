@@ -1,6 +1,6 @@
 <?php
 
-// Alumni Management System - Week 02 Routing
+// Alumni Management System - Week 02 & Week 03
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 
@@ -22,15 +22,40 @@ if (strlen($path) > 1 && str_ends_with($path, '/')) {
     $path = rtrim($path, '/');
 }
 
-// (Method check will be performed per route)
+// Helper: Get users from data/users.json
+function getUsersList() {
+    $file = __DIR__ . '/data/users.json';
+    if (!file_exists($file)) {
+        return [];
+    }
+    $content = file_get_contents($file);
+    $data = json_decode($content, true);
+    return is_array($data) ? $data : [];
+}
+
+// Helper: Save new user to data/users.json
+function saveNewUser($user) {
+    $file = __DIR__ . '/data/users.json';
+    $dir = dirname($file);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+    $users = getUsersList();
+    array_unshift($users, $user); // En yeni kullanıcı en başta
+    file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    return $user;
+}
 
 // Base styling for browser views
-function renderLayout($title, $content, $prefix = '') {
+function renderLayout($title, $content, $prefix = '', $activePage = '') {
     $homeUrl = $prefix . '/';
+    $usersUrl = $prefix . '/users';
     $aboutUrl = $prefix . '/about';
-    $helloUrl = $prefix . '/hello';
-    $helloEmreUrl = $prefix . '/hello/emre';
-    $sumUrl = $prefix . '/sum/15/27';
+    $healthUrl = $prefix . '/api/health';
+
+    $homeActive = $activePage === 'home' ? 'class="active"' : '';
+    $usersActive = $activePage === 'users' ? 'class="active"' : '';
+    $aboutActive = $activePage === 'about' ? 'class="active"' : '';
 
     return <<<HTML
 <!DOCTYPE html>
@@ -88,15 +113,18 @@ function renderLayout($title, $content, $prefix = '') {
             color: var(--text-muted);
             font-weight: 500;
             transition: color 0.2s;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
         }
         nav a:hover, nav a.active {
             color: var(--primary);
+            background: #eff6ff;
         }
         main {
             flex: 1;
-            max-width: 900px;
+            max-width: 950px;
             width: 100%;
-            margin: 2.5rem auto;
+            margin: 2rem auto;
             padding: 0 1.5rem;
         }
         .card {
@@ -105,15 +133,16 @@ function renderLayout($title, $content, $prefix = '') {
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
         }
         h1 {
-            font-size: 2rem;
+            font-size: 1.85rem;
             margin-bottom: 0.5rem;
             color: var(--text-main);
         }
         p {
             color: var(--text-muted);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
         .badge {
             display: inline-block;
@@ -121,13 +150,17 @@ function renderLayout($title, $content, $prefix = '') {
             color: var(--badge-text);
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             font-weight: 600;
             margin-bottom: 1rem;
         }
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
         .routes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
             margin-top: 1.5rem;
         }
@@ -158,6 +191,77 @@ function renderLayout($title, $content, $prefix = '') {
             font-size: 0.8rem;
             color: var(--text-muted);
         }
+        /* Form & Table styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .form-group input {
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.7rem 1.4rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .user-table th, .user-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        .user-table th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .user-table tr:hover {
+            background: #f1f5f9;
+        }
+        .json-preview {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
         footer {
             border-top: 1px solid var(--border);
             padding: 1.5rem;
@@ -165,6 +269,7 @@ function renderLayout($title, $content, $prefix = '') {
             font-size: 0.875rem;
             color: var(--text-muted);
             background: var(--card-bg);
+            margin-top: auto;
         }
     </style>
 </head>
@@ -172,16 +277,17 @@ function renderLayout($title, $content, $prefix = '') {
     <header>
         <a href="{$homeUrl}" class="logo">🎓 Alumni System</a>
         <nav>
-            <a href="{$homeUrl}">Home</a>
-            <a href="{$aboutUrl}">About</a>
-            <a href="{$helloUrl}">Hello</a>
+            <a href="{$homeUrl}" {$homeActive}>Home</a>
+            <a href="{$usersUrl}" {$usersActive}>Users (Arayüz)</a>
+            <a href="{$aboutUrl}" {$aboutActive}>About</a>
+            <a href="{$healthUrl}" target="_blank">API Health ↗</a>
         </nav>
     </header>
     <main>
         {$content}
     </main>
     <footer>
-        &copy; 2026 Alumni Tracking System &bull; Powered by PHP 8.2 & Docker
+        &copy; 2026 Alumni Tracking System &bull; Web Programming Week 03 &bull; Powered by PHP & Docker
     </footer>
 </body>
 </html>
@@ -189,10 +295,9 @@ HTML;
 }
 
 // -------------------------------------------------------------
-// Step 1 & 5: GET / -> temporary main page (with ok status)
+// Step 1 & 5: GET / -> Main Page
 // -------------------------------------------------------------
 if ($path === '/') {
-    // If called via curl/cli or explicitly requesting text, support returning "ok"
     $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
     if (isset($_GET['raw']) || str_contains($accept, 'text/plain')) {
         header('Content-Type: text/plain; charset=utf-8');
@@ -200,60 +305,249 @@ if ($path === '/') {
         exit;
     }
 
+    $users = getUsersList();
+    $userCount = count($users);
+
     header('Content-Type: text/html; charset=utf-8');
     $content = <<<HTML
         <div class="card">
             <span class="badge">● Status: ok</span>
+            <span class="badge badge-blue">👥 Kayıtlı Mezun: {$userCount}</span>
             <h1>🎓 Alumni Management System</h1>
-            <p>Welcome to the Alumni Tracking System. This is the temporary main page for Week 02 development.</p>
-            <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-            <h3>Active Project Routes</h3>
-            <p>You can click on the routes below to test them directly in your browser:</p>
+            <p>Mezun Yönetim ve Takip Sistemi geliştirme ortamına hoş geldiniz. Aşağıdaki kartlardan arayüzü ve API servislerini test edebilirsiniz.</p>
+            
+            <div style="margin-top: 1.5rem; padding: 1.25rem; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe;">
+                <h3 style="color: #1e40af; margin-bottom: 0.5rem;">🌟 Yeni Özellik: Arayüzden Kullanıcıları Görün ve Ekleyin!</h3>
+                <p style="color: #1e3a8a; margin-bottom: 1rem;">Postman'den veya tarayıcıdan eklenen tüm mezunları doğrudan web sayfasında görebilirsiniz.</p>
+                <a href="{$prefix}/users" class="btn" style="text-decoration: none; display: inline-block;">👉 Users Sayfasına Git</a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 2rem 0;">
+            
+            <h3>Aktif Sistem Rotaları</h3>
             <div class="routes-grid">
                 <div class="route-item">
-                    <span class="route-method">GET</span>
-                    <a href="{$prefix}/" class="route-path">/</a>
-                    <span class="route-desc">Temporary main page (Status: ok)</span>
+                    <span class="route-method">GET (UI)</span>
+                    <a href="{$prefix}/users" class="route-path">/users</a>
+                    <span class="route-desc">Mezun listesi ve kullanıcı ekleme arayüzü</span>
+                </div>
+                <div class="route-item">
+                    <span class="route-method">GET (API)</span>
+                    <a href="{$prefix}/api/health" class="route-path">/api/health</a>
+                    <span class="route-desc">JSON durum kontrolü {"status": "ok"}</span>
+                </div>
+                <div class="route-item">
+                    <span class="route-method">POST (API)</span>
+                    <a href="{$prefix}/api/users" class="route-path">/api/users</a>
+                    <span class="route-desc">Postman / Form ile mezun kaydetme</span>
+                </div>
+                <div class="route-item">
+                    <span class="route-method">GET (API)</span>
+                    <a href="{$prefix}/api/users" class="route-path">/api/users</a>
+                    <span class="route-desc">Tüm kullanıcıları JSON olarak alma</span>
                 </div>
                 <div class="route-item">
                     <span class="route-method">GET</span>
                     <a href="{$prefix}/about" class="route-path">/about</a>
-                    <span class="route-desc">Temporary about page</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">GET</span>
-                    <a href="{$prefix}/hello" class="route-path">/hello</a>
-                    <span class="route-desc">Returns "Hello, World!"</span>
+                    <span class="route-desc">Geçici hakkında sayfası</span>
                 </div>
                 <div class="route-item">
                     <span class="route-method">GET</span>
                     <a href="{$prefix}/hello/emre" class="route-path">/hello/emre</a>
-                    <span class="route-desc">Returns "Hello, Emre!"</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">GET</span>
-                    <a href="{$prefix}/api/health" class="route-path">/api/health</a>
-                    <span class="route-desc">Returns JSON {"status": "ok"}</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">POST</span>
-                    <a href="{$prefix}/api/users" class="route-path">/api/users</a>
-                    <span class="route-desc">Creates alumni user (JSON payload)</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">GET</span>
-                    <a href="{$prefix}/sum/15/27" class="route-path">/sum/15/27</a>
-                    <span class="route-desc">Returns sum of two numbers (42)</span>
+                    <span class="route-desc">Selamlama rotası</span>
                 </div>
             </div>
         </div>
 HTML;
-    echo renderLayout("Home", $content, $prefix);
+    echo renderLayout("Ana Sayfa", $content, $prefix, 'home');
     exit;
 }
 
 // -------------------------------------------------------------
-// Step 6: GET /about -> temporary about page
+// GET /users -> Web Interface to View and Add Users
+// -------------------------------------------------------------
+if ($path === '/users') {
+    $users = getUsersList();
+    
+    // Build Table Rows
+    $tableRows = '';
+    if (empty($users)) {
+        $tableRows = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 2rem;">Henüz kayıtlı kullanıcı bulunmamaktadır.</td></tr>';
+    } else {
+        foreach ($users as $u) {
+            $id = htmlspecialchars($u['id'] ?? '-');
+            $isim = htmlspecialchars($u['İsim'] ?? $u['name'] ?? $u['isim'] ?? 'İsimsiz');
+            $soyisim = htmlspecialchars($u['Soyisim'] ?? $u['surname'] ?? '');
+            $tamAd = trim($isim . ' ' . $soyisim);
+            $bolum = htmlspecialchars($u['Bölüm'] ?? $u['department'] ?? $u['bolum'] ?? '-');
+            $yil = htmlspecialchars($u['MezuniyetYılı'] ?? $u['graduationYear'] ?? $u['mezuniyet'] ?? '-');
+            $sehir = htmlspecialchars($u['Şehir'] ?? $u['city'] ?? $u['email'] ?? '-');
+
+            $tableRows .= "<tr>
+                <td><strong>#{$id}</strong></td>
+                <td><strong>{$tamAd}</strong></td>
+                <td>{$bolum}</td>
+                <td><span class=\"badge badge-blue\" style=\"margin:0;\">{$yil}</span></td>
+                <td>{$sehir}</td>
+            </tr>";
+        }
+    }
+
+    $apiUrl = $prefix . '/api/users';
+    header('Content-Type: text/html; charset=utf-8');
+    $content = <<<HTML
+        <div class="card">
+            <span class="badge">🌐 Web Arayüzü (URL/users)</span>
+            <h1>🎓 Kayıtlı Mezunlar & Kullanıcılar</h1>
+            <p>Hocanızın tahtaya yazdığı gibi: <strong>URL/users</strong> insanların gördüğü web arayüzüdür; <strong>URL/api/users</strong> ise Postman'in konuştuğu JSON API'dir. Postman'den eklediğiniz tüm veriler bu tabloda anında görünür!</p>
+
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>İsim / Soyisim</th>
+                        <th>Bölüm</th>
+                        <th>Mezuniyet Yılı</th>
+                        <th>Şehir / İletişim</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    {$tableRows}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>➕ Arayüzden Yeni Mezun Ekle</h3>
+            <p>Dilerseniz Postman yerine doğrudan buradan da form doldurarak <code>POST /api/users</code> servisini çalıştırabilirsiniz:</p>
+            
+            <form id="addUserForm" onsubmit="submitUser(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="isimInput">İsim</label>
+                        <input type="text" id="isimInput" name="İsim" placeholder="Örn: Zehra" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="soyisimInput">Soyisim</label>
+                        <input type="text" id="soyisimInput" name="Soyisim" placeholder="Örn: Aras">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bolumInput">Bölüm</label>
+                        <input type="text" id="bolumInput" name="Bölüm" placeholder="Örn: Bilgisayar Mühendisliği">
+                    </div>
+                    <div class="form-group">
+                        <label for="yilInput">Mezuniyet Yılı</label>
+                        <input type="number" id="yilInput" name="MezuniyetYılı" placeholder="Örn: 2024" value="2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="sehirInput">Şehir</label>
+                        <input type="text" id="sehirInput" name="Şehir" placeholder="Örn: İstanbul">
+                    </div>
+                </div>
+                <button type="submit" class="btn">🚀 Kullanıcıyı Ekle (POST /api/users)</button>
+            </form>
+
+            <div id="resultBox" style="display:none; margin-top: 1.5rem;">
+                <h4>✅ Sunucudan Dönen Canlı JSON Yanıtı:</h4>
+                <pre class="json-preview" id="jsonResult"></pre>
+            </div>
+        </div>
+
+        <script>
+            async function submitUser(e) {
+                e.preventDefault();
+                const form = document.getElementById('addUserForm');
+                const formData = new FormData(form);
+                
+                try {
+                    const response = await fetch('{$apiUrl}', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    
+                    document.getElementById('resultBox').style.display = 'block';
+                    document.getElementById('jsonResult').innerText = JSON.stringify(data, null, 2);
+                    
+                    // Listeyi yenilemek için sayfayı 1 sn sonra tazele
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } catch (err) {
+                    alert('Hata: ' + err.message);
+                }
+            }
+        </script>
+HTML;
+    echo renderLayout("Kullanıcılar", $content, $prefix, 'users');
+    exit;
+}
+
+// -------------------------------------------------------------
+// Week 03 - Step 1: GET /api/health -> JSON
+// -------------------------------------------------------------
+if ($path === '/api/health') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'status' => 'ok'
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+// -------------------------------------------------------------
+// Week 03 - Step 3: POST & GET /api/users -> JSON
+// -------------------------------------------------------------
+if ($path === '/api/users') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    if ($method === 'POST') {
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+
+        // Fallback for form-data submissions from Postman / HTML Form
+        if (!$data && !empty($_POST)) {
+            $data = $_POST;
+        }
+
+        if (!$data || !is_array($data)) {
+            http_response_code(400);
+            echo json_encode([
+                'error' => 'Bad Request',
+                'message' => 'Lütfen geçerli veriler gönderin.'
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Dynamic Alumni fields: Include id, timestamp and all custom fields ("what you send comes back")
+        $createdUser = [
+            'id' => rand(100, 999),
+            'createdAt' => date('c')
+        ];
+
+        foreach ($data as $key => $value) {
+            $createdUser[$key] = $value;
+        }
+
+        // Save to persistent file storage
+        saveNewUser($createdUser);
+
+        http_response_code(201); // 201 Created
+        echo json_encode($createdUser, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($method === 'GET') {
+        // Return all registered users in JSON format
+        $users = getUsersList();
+        echo json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// -------------------------------------------------------------
+// Week 02 - Step 6: GET /about -> Temporary about page
 // -------------------------------------------------------------
 if ($path === '/about') {
     header('Content-Type: text/html; charset=utf-8');
@@ -271,7 +565,7 @@ if ($path === '/about') {
                 <li><strong>Database:</strong> PostgreSQL 15</li>
                 <li><strong>Deployment:</strong> Single-command Docker Compose (<code>docker compose up</code>)</li>
                 <li><strong>AI Assistant:</strong> Antigravity (Google DeepMind)</li>
-                <li><strong>Milestone:</strong> Week 02 - Routing & First Routes</li>
+                <li><strong>Milestone:</strong> Week 03 - API & Endpoints (POST /api/users)</li>
             </ul>
 
             <div style="margin-top: 2rem;">
@@ -279,75 +573,8 @@ if ($path === '/about') {
             </div>
         </div>
 HTML;
-    echo renderLayout("About", $content, $prefix);
+    echo renderLayout("About", $content, $prefix, 'about');
     exit;
-}
-
-// -------------------------------------------------------------
-// Week 03 - Step 1: GET /api/health -> JSON
-// -------------------------------------------------------------
-if ($path === '/api/health') {
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode([
-        'status' => 'ok'
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
-// -------------------------------------------------------------
-// Week 03 - Step 3: POST /api/users -> JSON ("what you send comes back")
-// -------------------------------------------------------------
-if ($path === '/api/users') {
-    header('Content-Type: application/json; charset=utf-8');
-
-    if ($method === 'POST') {
-        $rawInput = file_get_contents('php://input');
-        $data = json_decode($rawInput, true);
-
-        // Fallback for form-encoded submissions
-        if (!$data && !empty($_POST)) {
-            $data = $_POST;
-        }
-
-        // If body is empty or not JSON, handle gracefully
-        if (!$data || !is_array($data)) {
-            http_response_code(400);
-            echo json_encode([
-                'error' => 'Bad Request',
-                'message' => 'Please provide a valid JSON body with user fields'
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
-        // Dynamic Alumni fields: Include id, timestamp and all custom fields sent by the user ("what you send comes back")
-        $createdUser = [
-            'id' => rand(100, 999),
-            'createdAt' => date('c')
-        ];
-
-        // Append every single field provided by the client (form-data or JSON)
-        foreach ($data as $key => $value) {
-            $createdUser[$key] = $value;
-        }
-
-        http_response_code(201); // 201 Created
-        echo json_encode($createdUser, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    if ($method === 'GET') {
-        // Helpful response for GET requests in browser
-        echo json_encode([
-            'message' => 'Send a POST request with a JSON body to create a user',
-            'samplePayload' => [
-                'name' => 'Zehra Aras',
-                'email' => 'zehra@example.com',
-                'department' => 'Bilgisayar Mühendisliği',
-                'graduationYear' => 2024
-            ]
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        exit;
-    }
 }
 
 // -------------------------------------------------------------
