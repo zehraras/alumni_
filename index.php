@@ -418,7 +418,7 @@ if ($path === '/users') {
     // Build Table Rows
     $tableRows = '';
     if (empty($users)) {
-        $tableRows = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted); padding: 2rem;">Henüz kayıtlı kullanıcı bulunmamaktadır.</td></tr>';
+        $tableRows = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 2rem;">Henüz kayıtlı kullanıcı bulunmamaktadır.</td></tr>';
     } else {
         foreach ($users as $u) {
             $id = htmlspecialchars($u['id'] ?? '-');
@@ -430,11 +430,12 @@ if ($path === '/users') {
             $sehir = htmlspecialchars($u['Şehir'] ?? $u['city'] ?? $u['email'] ?? '-');
 
             $tableRows .= "<tr>
-                <td><strong>#{$id}</strong></td>
+                <td><a href=\"{$apiUrl}/{$id}\" target=\"_blank\" title=\"Tekil JSON gör (Adım 4b)\" style=\"color: var(--primary); text-decoration: none; font-weight: bold;\">#{$id} ↗</a></td>
                 <td><strong>{$tamAd}</strong></td>
                 <td>{$bolum}</td>
                 <td><span class=\"badge badge-blue\" style=\"margin:0;\">{$yil}</span></td>
                 <td>{$sehir}</td>
+                <td><button onclick=\"deleteUser('{$id}')\" style=\"background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;\">Sil 🗑️</button></td>
             </tr>";
         }
     }
@@ -450,11 +451,12 @@ if ($path === '/users') {
             <table class="user-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>ID (Adım 4b)</th>
                         <th>İsim / Soyisim</th>
                         <th>Bölüm</th>
                         <th>Mezuniyet Yılı</th>
                         <th>Şehir / İletişim</th>
+                        <th>İşlem (Adım 6)</th>
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
@@ -517,10 +519,21 @@ if ($path === '/users') {
                     document.getElementById('resultBox').style.display = 'block';
                     document.getElementById('jsonResult').innerText = JSON.stringify(data, null, 2);
                     
-                    // Listeyi yenilemek için sayfayı 1 sn sonra tazele
                     setTimeout(() => {
                         window.location.reload();
                     }, 1200);
+                } catch (err) {
+                    alert('Hata: ' + err.message);
+                }
+            }
+
+            async function deleteUser(id) {
+                if (!confirm('ID #' + id + ' kullanıcısını silmek istediğinize emin misiniz? (Adım 6: DELETE /api/users/' + id + ')')) return;
+                try {
+                    const res = await fetch('{$apiUrl}/' + id, { method: 'DELETE' });
+                    const data = await res.json();
+                    alert(data.message || 'Silindi');
+                    window.location.reload();
                 } catch (err) {
                     alert('Hata: ' + err.message);
                 }
@@ -656,6 +669,45 @@ if (preg_match('#^/api/users/([^/]+)$#', $path, $matches)) {
         echo json_encode([
             'error' => 'Not Found',
             'message' => "ID {$id} olan kullanıcı bulunamadı."
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // Week 03 - Step 6: DELETE /api/users/{id} -> Delete user
+    if ($method === 'DELETE') {
+        $users = getUsersList();
+        $userIndex = -1;
+        $deletedUser = null;
+
+        foreach ($users as $index => $u) {
+            if (isset($u['id']) && (string)$u['id'] === (string)$id) {
+                $userIndex = $index;
+                $deletedUser = $u;
+                break;
+            }
+        }
+
+        if ($userIndex === -1) {
+            http_response_code(404);
+            echo json_encode([
+                'error' => 'Not Found',
+                'message' => "ID {$id} olan kullanıcı bulunamadı."
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Kullanıcıyı listeden kaldır
+        array_splice($users, $userIndex, 1);
+
+        // users.json dosyasına kaydet
+        $file = __DIR__ . '/data/users.json';
+        file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+        http_response_code(200);
+        echo json_encode([
+            'message' => "ID {$id} olan kullanıcı başarıyla silindi.",
+            'deletedId' => $id,
+            'user' => $deletedUser
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
