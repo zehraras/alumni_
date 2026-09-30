@@ -319,15 +319,16 @@ if ($path === '/api/users') {
             exit;
         }
 
-        // Default Alumni fields merged with incoming data ("what you send comes back")
-        $createdUser = array_merge([
+        // Dynamic Alumni fields: Include id, timestamp and all custom fields sent by the user ("what you send comes back")
+        $createdUser = [
             'id' => rand(100, 999),
-            'name' => 'Alumni User',
-            'email' => 'alumni@ogr.iu.edu.tr',
-            'department' => 'Computer Engineering',
-            'graduationYear' => 2024,
             'createdAt' => date('c')
-        ], $data);
+        ];
+
+        // Append every single field provided by the client (form-data or JSON)
+        foreach ($data as $key => $value) {
+            $createdUser[$key] = $value;
+        }
 
         http_response_code(201); // 201 Created
         echo json_encode($createdUser, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
