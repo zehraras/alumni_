@@ -46,6 +46,52 @@ function saveNewUser($user) {
     return $user;
 }
 
+// Helper: Parse request body for POST/PUT/PATCH (supports JSON, form-data, urlencoded)
+function parseRequestBody() {
+    $rawInput = file_get_contents('php://input');
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+    // 1. Try JSON
+    $data = json_decode($rawInput, true);
+    if (is_array($data) && !empty($data)) {
+        return $data;
+    }
+
+    // 2. Check $_POST
+    if (!empty($_POST)) {
+        return $_POST;
+    }
+
+    // 3. Parse multipart/form-data for PUT and PATCH requests
+    if (stripos($contentType, 'multipart/form-data') !== false) {
+        $data = [];
+        if (preg_match('/boundary=(.*)$/i', $contentType, $matches)) {
+            $boundary = trim($matches[1], '" ');
+            $blocks = explode('--' . $boundary, $rawInput);
+            foreach ($blocks as $block) {
+                if (trim($block) === '' || trim($block) === '--') continue;
+                if (preg_match('/name="([^"]+)"(?:\r?\n){2}(.*?)(?:\r?\n)?$/s', $block, $m)) {
+                    $name = $m[1];
+                    $value = trim($m[2]);
+                    $data[$name] = $value;
+                }
+            }
+        }
+        if (!empty($data)) {
+            return $data;
+        }
+    }
+
+    // 4. Try x-www-form-urlencoded
+    $parsed = [];
+    parse_str($rawInput, $parsed);
+    if (is_array($parsed) && !empty($parsed)) {
+        return $parsed;
+    }
+
+    return [];
+}
+
 // Base styling for browser views
 function renderLayout($title, $content, $prefix = '', $activePage = '') {
     $homeUrl = $prefix . '/';
@@ -503,15 +549,9 @@ if ($path === '/api/users') {
     header('Content-Type: application/json; charset=utf-8');
 
     if ($method === 'POST') {
-        $rawInput = file_get_contents('php://input');
-        $data = json_decode($rawInput, true);
+        $data = parseRequestBody();
 
-        // Fallback for form-data submissions from Postman / HTML Form
-        if (!$data && !empty($_POST)) {
-            $data = $_POST;
-        }
-
-        if (!$data || !is_array($data)) {
+        if (!$data || !is_array($data) || empty($data)) {
             http_response_code(400);
             echo json_encode([
                 'error' => 'Bad Request',
@@ -555,20 +595,9 @@ if (preg_match('#^/api/users/([^/]+)$#', $path, $matches)) {
 
     // PUT or PATCH: Update user
     if ($method === 'PUT' || $method === 'PATCH') {
-        $rawInput = file_get_contents('php://input');
-        $data = json_decode($rawInput, true);
+        $data = parseRequestBody();
 
-        // If not JSON, try parsing form-urlencoded
-        if (!$data) {
-            parse_str($rawInput, $data);
-        }
-
-        // Fallback to $_POST if sent via form
-        if ((!$data || empty($data)) && !empty($_POST)) {
-            $data = $_POST;
-        }
-
-        if (!$data || !is_array($data)) {
+        if (!$data || !is_array($data) || empty($data)) {
             http_response_code(400);
             echo json_encode([
                 'error' => 'Bad Request',
