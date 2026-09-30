@@ -22,13 +22,7 @@ if (strlen($path) > 1 && str_ends_with($path, '/')) {
     $path = rtrim($path, '/');
 }
 
-// Method check
-if ($method !== 'GET') {
-    http_response_code(405);
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "Method Not Allowed";
-    exit;
-}
+// (Method check will be performed per route)
 
 // Base styling for browser views
 function renderLayout($title, $content, $prefix = '') {
@@ -242,6 +236,11 @@ if ($path === '/') {
                     <span class="route-desc">Returns JSON {"status": "ok"}</span>
                 </div>
                 <div class="route-item">
+                    <span class="route-method">POST</span>
+                    <a href="{$prefix}/api/users" class="route-path">/api/users</a>
+                    <span class="route-desc">Creates alumni user (JSON payload)</span>
+                </div>
+                <div class="route-item">
                     <span class="route-method">GET</span>
                     <a href="{$prefix}/sum/15/27" class="route-path">/sum/15/27</a>
                     <span class="route-desc">Returns sum of two numbers (42)</span>
@@ -293,6 +292,61 @@ if ($path === '/api/health') {
         'status' => 'ok'
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
+}
+
+// -------------------------------------------------------------
+// Week 03 - Step 3: POST /api/users -> JSON ("what you send comes back")
+// -------------------------------------------------------------
+if ($path === '/api/users') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    if ($method === 'POST') {
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+
+        // Fallback for form-encoded submissions
+        if (!$data && !empty($_POST)) {
+            $data = $_POST;
+        }
+
+        // If body is empty or not JSON, handle gracefully
+        if (!$data || !is_array($data)) {
+            http_response_code(400);
+            echo json_encode([
+                'error' => 'Bad Request',
+                'message' => 'Please provide a valid JSON body with user fields'
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Default Alumni fields merged with incoming data ("what you send comes back")
+        $createdUser = array_merge([
+            'id' => rand(100, 999),
+            'name' => 'Alumni User',
+            'email' => 'alumni@ogr.iu.edu.tr',
+            'department' => 'Computer Engineering',
+            'graduationYear' => 2024,
+            'createdAt' => date('c')
+        ], $data);
+
+        http_response_code(201); // 201 Created
+        echo json_encode($createdUser, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($method === 'GET') {
+        // Helpful response for GET requests in browser
+        echo json_encode([
+            'message' => 'Send a POST request with a JSON body to create a user',
+            'samplePayload' => [
+                'name' => 'Zehra Aras',
+                'email' => 'zehra@example.com',
+                'department' => 'Bilgisayar Mühendisliği',
+                'graduationYear' => 2024
+            ]
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 }
 
 // -------------------------------------------------------------
