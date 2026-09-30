@@ -430,8 +430,8 @@ if ($path === '/users') {
             $sehir = htmlspecialchars($u['Şehir'] ?? $u['city'] ?? $u['email'] ?? '-');
 
             $tableRows .= "<tr>
-                <td><a href=\"{$apiUrl}/{$id}\" target=\"_blank\" title=\"Tekil JSON gör (Adım 4b)\" style=\"color: var(--primary); text-decoration: none; font-weight: bold;\">#{$id} ↗</a></td>
-                <td><strong>{$tamAd}</strong></td>
+                <td><a href=\"{$prefix}/users/{$id}\" title=\"Görsel Profil Kartını Aç (Adım 4b Arayüzü)\" style=\"color: var(--primary); text-decoration: none; font-weight: bold;\">#{$id} ↗</a></td>
+                <td><a href=\"{$prefix}/users/{$id}\" title=\"Detayları Gör\" style=\"color: var(--text-main); text-decoration: none; font-weight: 600;\">{$tamAd} 🔍</a></td>
                 <td>{$bolum}</td>
                 <td><span class=\"badge badge-blue\" style=\"margin:0;\">{$yil}</span></td>
                 <td>{$sehir}</td>
@@ -541,6 +541,109 @@ if ($path === '/users') {
         </script>
 HTML;
     echo renderLayout("Kullanıcılar", $content, $prefix, 'users');
+    exit;
+}
+
+// -------------------------------------------------------------
+// GET /users/{id} -> Visual HTML Profile Page for a Single User (Adım 4b Görsel Arayüzü)
+// -------------------------------------------------------------
+if (preg_match('#^/users/([^/]+)$#', $path, $matches)) {
+    $id = $matches[1];
+    $users = getUsersList();
+    $user = null;
+
+    foreach ($users as $u) {
+        if (isset($u['id']) && (string)$u['id'] === (string)$id) {
+            $user = $u;
+            break;
+        }
+    }
+
+    if (!$user) {
+        header('Content-Type: text/html; charset=utf-8');
+        $notFound = <<<HTML
+            <div class="card" style="text-align: center;">
+                <h1 style="color: #ef4444;">Kullanıcı Bulunamadı</h1>
+                <p>ID #{$id} ile kayıtlı bir mezun sistemde bulunamadı.</p>
+                <a href="{$prefix}/users" class="btn" style="text-decoration:none;">&larr; Mezunlar Listesine Dön</a>
+            </div>
+        HTML;
+        echo renderLayout("Kullanıcı Bulunamadı", $notFound, $prefix, 'users');
+        exit;
+    }
+
+    $tamAd = htmlspecialchars(trim(($user['İsim'] ?? $user['name'] ?? $user['isim'] ?? 'İsimsiz') . ' ' . ($user['Soyisim'] ?? $user['surname'] ?? '')));
+    $bolum = htmlspecialchars($user['Bölüm'] ?? $user['department'] ?? $user['bolum'] ?? '-');
+    $yil = htmlspecialchars($user['MezuniyetYılı'] ?? $user['graduationYear'] ?? $user['mezuniyet'] ?? '-');
+    $sehir = htmlspecialchars($user['Şehir'] ?? $user['city'] ?? $user['email'] ?? '-');
+    $pozisyon = htmlspecialchars($user['Pozisyon'] ?? $user['position'] ?? '-');
+    $createdAt = htmlspecialchars($user['createdAt'] ?? '-');
+    $updatedAt = htmlspecialchars($user['updatedAt'] ?? 'Henüz güncellenmedi');
+
+    $apiJsonUrl = $prefix . '/api/users/' . $id;
+
+    header('Content-Type: text/html; charset=utf-8');
+    $content = <<<HTML
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <span class="badge">🎓 Tekil Mezun Profili (Adım 4b Arayüzü)</span>
+                    <h1>{$tamAd}</h1>
+                    <p style="color: var(--text-muted); margin: 0;">Sistem Kayıt ID: <strong>#{$id}</strong></p>
+                </div>
+                <div>
+                    <a href="{$prefix}/users" class="btn" style="background:#64748b; text-decoration:none; font-size:0.85rem;">&larr; Tüm Mezunlara Dön</a>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border);">
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Bölüm:</span>
+                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">{$bolum}</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Mezuniyet Yılı:</span>
+                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;"><span class="badge badge-blue" style="margin:0;">{$yil}</span></div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Şehir:</span>
+                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">{$sehir}</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Pozisyon:</span>
+                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">{$pozisyon}</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Oluşturulma:</span>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">{$createdAt}</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Son Güncelleme:</span>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">{$updatedAt}</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <a href="{$apiJsonUrl}" target="_blank" class="btn" style="background: #0284c7; text-decoration:none;">📄 Bu Kişinin JSON Verisini Gör (Adım 4b API) ↗</a>
+                <button onclick="deleteThisUser('{$id}')" class="btn" style="background: #ef4444;">🗑️ Bu Kullanıcıyı Sil (Adım 6)</button>
+            </div>
+        </div>
+
+        <script>
+            async function deleteThisUser(id) {
+                if (!confirm('ID #' + id + ' kullanıcısını silmek istediğinize emin misiniz?')) return;
+                try {
+                    const res = await fetch('{$prefix}/api/users/' + id, { method: 'DELETE' });
+                    const data = await res.json();
+                    alert(data.message || 'Kullanıcı silindi.');
+                    window.location.href = '{$prefix}/users';
+                } catch (e) {
+                    alert('Hata: ' + e.message);
+                }
+            }
+        </script>
+    HTML;
+    echo renderLayout("Mezun: {$tamAd}", $content, $prefix, 'users');
     exit;
 }
 
