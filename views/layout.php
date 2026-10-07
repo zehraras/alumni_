@@ -142,6 +142,7 @@ $aboutActive = $activePage === 'about' ? 'class="active"' : '';
         <nav>
             <a href="<?= htmlspecialchars($homeUrl) ?>" <?= $homeActive ?>>Ana Sayfa</a>
             <a href="<?= htmlspecialchars($usersUrl) ?>" <?= $usersActive ?>>Kullanıcılar</a>
+            <a href="<?= htmlspecialchars($prefix) ?>/announcements" <?= ($activePage === 'announcements') ? 'class="active"' : '' ?>>Duyurular</a>
             <a href="<?= htmlspecialchars($aboutUrl) ?>" <?= $aboutActive ?>>Hakkında</a>
         </nav>
     </header>

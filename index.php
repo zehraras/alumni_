@@ -3,6 +3,8 @@
 // Alumni Management System - Week 02 & Week 03 & Week 04
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/ApiUserController.php';
+require_once __DIR__ . '/controllers/AnnouncementController.php';
+require_once __DIR__ . '/controllers/ApiAnnouncementController.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -446,6 +448,20 @@ if (preg_match('#^/users/(\d+)/delete$#', $path, $matches) && $method === 'POST'
 }
 
 // -------------------------------------------------------------
+// Announcement Web Routes
+// -------------------------------------------------------------
+$announcementController = new AnnouncementController($prefix);
+
+if ($path === '/announcements' && $method === 'GET') { $announcementController->index(); exit; }
+if ($path === '/announcements/create' && $method === 'GET') { $announcementController->create(); exit; }
+if ($path === '/announcements' && $method === 'POST') { $announcementController->store(parseRequestBody()); exit; }
+if (preg_match('#^/announcements/(\d+)$#', $path, $matches) && $method === 'GET') { $announcementController->show((int)$matches[1]); exit; }
+if (preg_match('#^/announcements/(\d+)/edit$#', $path, $matches) && $method === 'GET') { $announcementController->edit((int)$matches[1]); exit; }
+if (preg_match('#^/announcements/(\d+)/update$#', $path, $matches) && $method === 'POST') { $announcementController->update((int)$matches[1], parseRequestBody()); exit; }
+if (preg_match('#^/announcements/(\d+)/delete$#', $path, $matches) && $method === 'POST') { $announcementController->destroy((int)$matches[1]); exit; }
+
+
+// -------------------------------------------------------------
 // Week 03 - Step 1: GET /api/health -> JSON
 // -------------------------------------------------------------
 if ($path === '/api/health') {
@@ -586,6 +602,41 @@ if (preg_match('#^/api/users/([^/]+)$#', $path, $matches)) {
     if ($method === 'DELETE') {
         $response = $apiController->delete((int)$id);
         echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// -------------------------------------------------------------
+// Announcement API Routes (Homework)
+// -------------------------------------------------------------
+if ($path === '/api/announcements') {
+    header('Content-Type: application/json; charset=utf-8');
+    $apiAnnouncementController = new ApiAnnouncementController();
+    if ($method === 'POST') {
+        echo json_encode($apiAnnouncementController->create(parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'GET') {
+        echo json_encode($apiAnnouncementController->index(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+if (preg_match('#^/api/announcements/(\d+)$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $id = (int)$matches[1];
+    $apiAnnouncementController = new ApiAnnouncementController();
+    
+    if ($method === 'GET') {
+        echo json_encode($apiAnnouncementController->show($id), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'PUT' || $method === 'PATCH') {
+        echo json_encode($apiAnnouncementController->update($id, parseRequestBody(), $method === 'PATCH'), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'DELETE') {
+        echo json_encode($apiAnnouncementController->delete($id), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
