@@ -403,38 +403,45 @@ $userController = new UserController($prefix);
 // GET /users -> Listing (Read)
 if ($path === '/users' && $method === 'GET') {
     $userController->index();
+    exit;
 }
 
 // GET /users/create -> Show create form
 if ($path === '/users/create' && $method === 'GET') {
     $userController->create();
+    exit;
 }
 
 // POST /users -> Create
 if ($path === '/users' && $method === 'POST') {
     $data = parseRequestBody();
     $userController->store($data);
+    exit;
 }
 
 // GET /users/{id} -> Single view (Read)
 if (preg_match('#^/users/(\d+)$#', $path, $matches) && $method === 'GET') {
     $userController->show((int)$matches[1]);
+    exit;
 }
 
 // GET /users/{id}/edit -> Show edit form
 if (preg_match('#^/users/(\d+)/edit$#', $path, $matches) && $method === 'GET') {
     $userController->edit((int)$matches[1]);
+    exit;
 }
 
 // POST /users/{id}/update -> Update
 if (preg_match('#^/users/(\d+)/update$#', $path, $matches) && $method === 'POST') {
     $data = parseRequestBody();
     $userController->update((int)$matches[1], $data);
+    exit;
 }
 
 // POST /users/{id}/delete -> Delete
 if (preg_match('#^/users/(\d+)/delete$#', $path, $matches) && $method === 'POST') {
     $userController->destroy((int)$matches[1]);
+    exit;
 }
 
 // -------------------------------------------------------------
