@@ -396,235 +396,45 @@ HTML;
 }
 
 // -------------------------------------------------------------
-// GET /users -> Web Interface to View and Add Users
+// Web Interface Routes (Week 04 - Steps 5 & 6)
 // -------------------------------------------------------------
-if ($path === '/users') {
-    $userController = new UserController();
-    $users = $userController->index();
-    
-    // Build Table Rows
-    $tableRows = '';
-    if (empty($users)) {
-        $tableRows = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding: 2rem;">Henüz kayıtlı kullanıcı bulunmamaktadır.</td></tr>';
-    } else {
-        foreach ($users as $u) {
-            $id = htmlspecialchars($u['id'] ?? '-');
-            $isim = htmlspecialchars($u['İsim'] ?? $u['name'] ?? $u['isim'] ?? 'İsimsiz');
-            $soyisim = htmlspecialchars($u['Soyisim'] ?? $u['surname'] ?? '');
-            $tamAd = trim($isim . ' ' . $soyisim);
-            $bolum = htmlspecialchars($u['Bölüm'] ?? $u['department'] ?? $u['bolum'] ?? '-');
-            $yil = htmlspecialchars($u['MezuniyetYılı'] ?? $u['graduationYear'] ?? $u['mezuniyet'] ?? '-');
-            $sehir = htmlspecialchars($u['Şehir'] ?? $u['city'] ?? $u['email'] ?? '-');
+$userController = new UserController($prefix);
 
-            $tableRows .= "<tr>
-                <td><a href=\"{$prefix}/users/{$id}\" title=\"Görsel Profil Kartını Aç (Adım 4b Arayüzü)\" style=\"color: var(--primary); text-decoration: none; font-weight: bold;\">#{$id} ↗</a></td>
-                <td><a href=\"{$prefix}/users/{$id}\" title=\"Detayları Gör\" style=\"color: var(--text-main); text-decoration: none; font-weight: 600;\">{$tamAd} 🔍</a></td>
-                <td>{$bolum}</td>
-                <td><span class=\"badge badge-blue\" style=\"margin:0;\">{$yil}</span></td>
-                <td>{$sehir}</td>
-                <td><button onclick=\"deleteUser('{$id}')\" style=\"background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;\">Sil 🗑️</button></td>
-            </tr>";
-        }
-    }
-
-    $apiUrl = $prefix . '/api/users';
-    header('Content-Type: text/html; charset=utf-8');
-    $content = <<<HTML
-        <div class="card">
-            <span class="badge">🌐 Web Arayüzü (URL/users)</span>
-            <h1>🎓 Kayıtlı Mezunlar & Kullanıcılar</h1>
-            <p>Hocanızın tahtaya yazdığı gibi: <strong>URL/users</strong> insanların gördüğü web arayüzüdür; <strong>URL/api/users</strong> ise Postman'in konuştuğu JSON API'dir. Postman'den eklediğiniz tüm veriler bu tabloda anında görünür!</p>
-
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>ID (Adım 4b)</th>
-                        <th>İsim / Soyisim</th>
-                        <th>Bölüm</th>
-                        <th>Mezuniyet Yılı</th>
-                        <th>Şehir / İletişim</th>
-                        <th>İşlem (Adım 6)</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody">
-                    {$tableRows}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="card">
-            <h3>➕ Arayüzden Yeni Mezun Ekle</h3>
-            <p>Dilerseniz Postman yerine doğrudan buradan da form doldurarak <code>POST /api/users</code> servisini çalıştırabilirsiniz:</p>
-            
-            <form id="addUserForm" onsubmit="submitUser(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="isimInput">İsim</label>
-                        <input type="text" id="isimInput" name="İsim" placeholder="Örn: Zehra" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="soyisimInput">Soyisim</label>
-                        <input type="text" id="soyisimInput" name="Soyisim" placeholder="Örn: Aras">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="bolumInput">Bölüm</label>
-                        <input type="text" id="bolumInput" name="Bölüm" placeholder="Örn: Bilgisayar Mühendisliği">
-                    </div>
-                    <div class="form-group">
-                        <label for="yilInput">Mezuniyet Yılı</label>
-                        <input type="number" id="yilInput" name="MezuniyetYılı" placeholder="Örn: 2024" value="2024">
-                    </div>
-                    <div class="form-group">
-                        <label for="sehirInput">Şehir</label>
-                        <input type="text" id="sehirInput" name="Şehir" placeholder="Örn: İstanbul">
-                    </div>
-                </div>
-                <button type="submit" class="btn">🚀 Kullanıcıyı Ekle (POST /api/users)</button>
-            </form>
-
-            <div id="resultBox" style="display:none; margin-top: 1.5rem;">
-                <h4>✅ Sunucudan Dönen Canlı JSON Yanıtı:</h4>
-                <pre class="json-preview" id="jsonResult"></pre>
-            </div>
-        </div>
-
-        <script>
-            async function submitUser(e) {
-                e.preventDefault();
-                const form = document.getElementById('addUserForm');
-                const formData = new FormData(form);
-                
-                try {
-                    const response = await fetch('{$apiUrl}', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    
-                    document.getElementById('resultBox').style.display = 'block';
-                    document.getElementById('jsonResult').innerText = JSON.stringify(data, null, 2);
-                    
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1200);
-                } catch (err) {
-                    alert('Hata: ' + err.message);
-                }
-            }
-
-            async function deleteUser(id) {
-                if (!confirm('ID #' + id + ' kullanıcısını silmek istediğinize emin misiniz? (Adım 6: DELETE /api/users/' + id + ')')) return;
-                try {
-                    const res = await fetch('{$apiUrl}/' + id, { method: 'DELETE' });
-                    const data = await res.json();
-                    alert(data.message || 'Silindi');
-                    window.location.reload();
-                } catch (err) {
-                    alert('Hata: ' + err.message);
-                }
-            }
-        </script>
-HTML;
-    echo renderLayout("Kullanıcılar", $content, $prefix, 'users');
-    exit;
+// GET /users -> Listing (Read)
+if ($path === '/users' && $method === 'GET') {
+    $userController->index();
 }
 
-// -------------------------------------------------------------
-// GET /users/{id} -> Visual HTML Profile Page for a Single User (Adım 4b Görsel Arayüzü)
-// -------------------------------------------------------------
-if (preg_match('#^/users/([^/]+)$#', $path, $matches)) {
-    $id = $matches[1];
-    $userController = new UserController();
-    $user = $userController->show((int)$id);
+// GET /users/create -> Show create form
+if ($path === '/users/create' && $method === 'GET') {
+    $userController->create();
+}
 
-    if (!$user) {
-        header('Content-Type: text/html; charset=utf-8');
-        $notFound = <<<HTML
-            <div class="card" style="text-align: center;">
-                <h1 style="color: #ef4444;">Kullanıcı Bulunamadı</h1>
-                <p>ID #{$id} ile kayıtlı bir mezun sistemde bulunamadı.</p>
-                <a href="{$prefix}/users" class="btn" style="text-decoration:none;">&larr; Mezunlar Listesine Dön</a>
-            </div>
-        HTML;
-        echo renderLayout("Kullanıcı Bulunamadı", $notFound, $prefix, 'users');
-        exit;
-    }
+// POST /users -> Create
+if ($path === '/users' && $method === 'POST') {
+    $data = parseRequestBody();
+    $userController->store($data);
+}
 
-    $tamAd = htmlspecialchars(trim(($user['İsim'] ?? $user['name'] ?? $user['isim'] ?? 'İsimsiz') . ' ' . ($user['Soyisim'] ?? $user['surname'] ?? '')));
-    $bolum = htmlspecialchars($user['Bölüm'] ?? $user['department'] ?? $user['bolum'] ?? '-');
-    $yil = htmlspecialchars($user['MezuniyetYılı'] ?? $user['graduationYear'] ?? $user['mezuniyet'] ?? '-');
-    $sehir = htmlspecialchars($user['Şehir'] ?? $user['city'] ?? $user['email'] ?? '-');
-    $pozisyon = htmlspecialchars($user['Pozisyon'] ?? $user['position'] ?? '-');
-    $createdAt = htmlspecialchars($user['createdAt'] ?? '-');
-    $updatedAt = htmlspecialchars($user['updatedAt'] ?? 'Henüz güncellenmedi');
+// GET /users/{id} -> Single view (Read)
+if (preg_match('#^/users/(\d+)$#', $path, $matches) && $method === 'GET') {
+    $userController->show((int)$matches[1]);
+}
 
-    $apiJsonUrl = $prefix . '/api/users/' . $id;
+// GET /users/{id}/edit -> Show edit form
+if (preg_match('#^/users/(\d+)/edit$#', $path, $matches) && $method === 'GET') {
+    $userController->edit((int)$matches[1]);
+}
 
-    header('Content-Type: text/html; charset=utf-8');
-    $content = <<<HTML
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <span class="badge">🎓 Tekil Mezun Profili (Adım 4b Arayüzü)</span>
-                    <h1>{$tamAd}</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Sistem Kayıt ID: <strong>#{$id}</strong></p>
-                </div>
-                <div>
-                    <a href="{$prefix}/users" class="btn" style="background:#64748b; text-decoration:none; font-size:0.85rem;">&larr; Tüm Mezunlara Dön</a>
-                </div>
-            </div>
+// POST /users/{id}/update -> Update
+if (preg_match('#^/users/(\d+)/update$#', $path, $matches) && $method === 'POST') {
+    $data = parseRequestBody();
+    $userController->update((int)$matches[1], $data);
+}
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border);">
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Bölüm:</span>
-                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">{$bolum}</div>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Mezuniyet Yılı:</span>
-                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;"><span class="badge badge-blue" style="margin:0;">{$yil}</span></div>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Şehir:</span>
-                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">{$sehir}</div>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Pozisyon:</span>
-                    <div style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">{$pozisyon}</div>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Oluşturulma:</span>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">{$createdAt}</div>
-                </div>
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Son Güncelleme:</span>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">{$updatedAt}</div>
-                </div>
-            </div>
-
-            <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-                <a href="{$apiJsonUrl}" target="_blank" class="btn" style="background: #0284c7; text-decoration:none;">📄 Bu Kişinin JSON Verisini Gör (Adım 4b API) ↗</a>
-                <button onclick="deleteThisUser('{$id}')" class="btn" style="background: #ef4444;">🗑️ Bu Kullanıcıyı Sil (Adım 6)</button>
-            </div>
-        </div>
-
-        <script>
-            async function deleteThisUser(id) {
-                if (!confirm('ID #' + id + ' kullanıcısını silmek istediğinize emin misiniz?')) return;
-                try {
-                    const res = await fetch('{$prefix}/api/users/' + id, { method: 'DELETE' });
-                    const data = await res.json();
-                    alert(data.message || 'Kullanıcı silindi.');
-                    window.location.href = '{$prefix}/users';
-                } catch (e) {
-                    alert('Hata: ' + e.message);
-                }
-            }
-        </script>
-    HTML;
-    echo renderLayout("Mezun: {$tamAd}", $content, $prefix, 'users');
-    exit;
+// POST /users/{id}/delete -> Delete
+if (preg_match('#^/users/(\d+)/delete$#', $path, $matches) && $method === 'POST') {
+    $userController->destroy((int)$matches[1]);
 }
 
 // -------------------------------------------------------------
