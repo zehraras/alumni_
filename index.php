@@ -332,7 +332,8 @@ if ($path === '/') {
         exit;
     }
 
-    $users = getUsersList();
+    $userModel = new UserModel();
+    $users = $userModel->getAllUsers();
     $userCount = count($users);
 
     header('Content-Type: text/html; charset=utf-8');
