@@ -6,12 +6,6 @@
         "isim": "dilek"
     },
     {
-        "id": 394,
-        "createdAt": "2026-09-30T07:22:27+00:00",
-        "İsim": "Sema",
-        "isim": "dilek"
-    },
-    {
         "id": 345,
         "createdAt": "2026-09-30T07:20:03+00:00",
         "İsim": "zehra",
@@ -19,11 +13,6 @@
         "Bölüm": "ybs",
         "MezuniyetYılı": "2027",
         "Şehir": "istanbul"
-    },
-    {
-        "id": 338,
-        "createdAt": "2026-09-30T07:18:57+00:00",
-        "İsim": "Sema"
     },
     {
         "id": 885,
@@ -43,6 +32,14 @@
         "MezuniyetYılı": "2024",
         "Şehir": "İzmir",
         "Pozisyon": "Yazılım Mühendisi",
-        "updatedAt": "2026-09-30T07:38:31+00:00"
+        "updatedAt": "2026-10-07T13:01:26Z"
+    },
+    {
+        "id": 886,
+        "İsim": "ndnc",
+        "Soyisim": "sdncjnedk",
+        "Bölüm": "ewdkeow",
+        "MezuniyetYılı": "2022",
+        "Şehir": "kewfoewko"
     }
 ]
