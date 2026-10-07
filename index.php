@@ -1,6 +1,9 @@
 <?php
 
-// Alumni Management System - Week 02 & Week 03
+// Alumni Management System - Week 02 & Week 03 & Week 04
+require_once __DIR__ . '/controllers/UserController.php';
+require_once __DIR__ . '/controllers/ApiUserController.php';
+
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 
@@ -22,29 +25,7 @@ if (strlen($path) > 1 && str_ends_with($path, '/')) {
     $path = rtrim($path, '/');
 }
 
-// Helper: Get users from data/users.json
-function getUsersList() {
-    $file = __DIR__ . '/data/users.json';
-    if (!file_exists($file)) {
-        return [];
-    }
-    $content = file_get_contents($file);
-    $data = json_decode($content, true);
-    return is_array($data) ? $data : [];
-}
 
-// Helper: Save new user to data/users.json
-function saveNewUser($user) {
-    $file = __DIR__ . '/data/users.json';
-    $dir = dirname($file);
-    if (!is_dir($dir)) {
-        mkdir($dir, 0777, true);
-    }
-    $users = getUsersList();
-    array_unshift($users, $user); // En yeni kullanıcı en başta
-    file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-    return $user;
-}
 
 // Helper: Parse request body for POST/PUT/PATCH (supports JSON, form-data, urlencoded)
 function parseRequestBody() {
@@ -418,7 +399,8 @@ HTML;
 // GET /users -> Web Interface to View and Add Users
 // -------------------------------------------------------------
 if ($path === '/users') {
-    $users = getUsersList();
+    $userController = new UserController();
+    $users = $userController->index();
     
     // Build Table Rows
     $tableRows = '';
@@ -554,15 +536,8 @@ HTML;
 // -------------------------------------------------------------
 if (preg_match('#^/users/([^/]+)$#', $path, $matches)) {
     $id = $matches[1];
-    $users = getUsersList();
-    $user = null;
-
-    foreach ($users as $u) {
-        if (isset($u['id']) && (string)$u['id'] === (string)$id) {
-            $user = $u;
-            break;
-        }
-    }
+    $userController = new UserController();
+    $user = $userController->show((int)$id);
 
     if (!$user) {
         header('Content-Type: text/html; charset=utf-8');
@@ -677,6 +652,19 @@ if ($path === '/api/swagger') {
             'version' => '1.0.0'
         ],
         'paths' => [
+            '/users' => [
+                'get' => [
+                    'summary' => 'Web Arayüzü: Tüm mezunları listele',
+                    'responses' => ['200' => ['description' => 'Mezun listesi HTML sayfası']]
+                ]
+            ],
+            '/users/{id}' => [
+                'get' => [
+                    'summary' => 'Web Arayüzü: Tekil mezun profili',
+                    'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                    'responses' => ['200' => ['description' => 'Mezun profili HTML sayfası']]
+                ]
+            ],
             '/api/health' => [
                 'get' => [
                     'summary' => 'Sistem sağlık durumu kontrolü',
@@ -735,40 +723,18 @@ if ($path === '/api/swagger') {
 if ($path === '/api/users') {
     header('Content-Type: application/json; charset=utf-8');
 
+    $apiController = new ApiUserController();
+    
     if ($method === 'POST') {
         $data = parseRequestBody();
-
-        if (!$data || !is_array($data) || empty($data)) {
-            http_response_code(400);
-            echo json_encode([
-                'error' => 'Bad Request',
-                'message' => 'Lütfen geçerli veriler gönderin.'
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
-        // Dynamic Alumni fields: Include id, timestamp and all custom fields ("what you send comes back")
-        $createdUser = [
-            'id' => rand(100, 999),
-            'createdAt' => date('c')
-        ];
-
-        foreach ($data as $key => $value) {
-            $createdUser[$key] = $value;
-        }
-
-        // Save to persistent file storage
-        saveNewUser($createdUser);
-
-        http_response_code(201); // 201 Created
-        echo json_encode($createdUser, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $response = $apiController->create($data);
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     if ($method === 'GET') {
-        // Return all registered users in JSON format
-        $users = getUsersList();
-        echo json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $response = $apiController->index();
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
@@ -780,109 +746,28 @@ if (preg_match('#^/api/users/([^/]+)$#', $path, $matches)) {
     header('Content-Type: application/json; charset=utf-8');
     $id = $matches[1];
 
+    $apiController = new ApiUserController();
+    
     // PUT or PATCH: Update user
     if ($method === 'PUT' || $method === 'PATCH') {
         $data = parseRequestBody();
-
-        if (!$data || !is_array($data) || empty($data)) {
-            http_response_code(400);
-            echo json_encode([
-                'error' => 'Bad Request',
-                'message' => 'Lütfen güncellenecek alanları JSON veya form verisi olarak gönderin.'
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
-        $users = getUsersList();
-        $userIndex = -1;
-
-        foreach ($users as $index => $u) {
-            if (isset($u['id']) && (string)$u['id'] === (string)$id) {
-                $userIndex = $index;
-                break;
-            }
-        }
-
-        if ($userIndex === -1) {
-            http_response_code(404);
-            echo json_encode([
-                'error' => 'Not Found',
-                'message' => "ID {$id} olan kullanıcı bulunamadı."
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
-        // Update user fields
-        foreach ($data as $k => $v) {
-            if ($k === 'id') continue; // ID değiştirilmez
-            $users[$userIndex][$k] = $v;
-        }
-        $users[$userIndex]['updatedAt'] = date('c');
-
-        // Save to file
-        $file = __DIR__ . '/data/users.json';
-        file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-
-        http_response_code(200);
-        echo json_encode($users[$userIndex], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $isPatch = ($method === 'PATCH');
+        $response = $apiController->update((int)$id, $data, $isPatch);
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     // GET single user: /api/users/{id}
     if ($method === 'GET') {
-        $users = getUsersList();
-        foreach ($users as $u) {
-            if (isset($u['id']) && (string)$u['id'] === (string)$id) {
-                http_response_code(200);
-                echo json_encode($u, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                exit;
-            }
-        }
-
-        http_response_code(404);
-        echo json_encode([
-            'error' => 'Not Found',
-            'message' => "ID {$id} olan kullanıcı bulunamadı."
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $response = $apiController->show((int)$id);
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     // Week 03 - Step 6: DELETE /api/users/{id} -> Delete user
     if ($method === 'DELETE') {
-        $users = getUsersList();
-        $userIndex = -1;
-        $deletedUser = null;
-
-        foreach ($users as $index => $u) {
-            if (isset($u['id']) && (string)$u['id'] === (string)$id) {
-                $userIndex = $index;
-                $deletedUser = $u;
-                break;
-            }
-        }
-
-        if ($userIndex === -1) {
-            http_response_code(404);
-            echo json_encode([
-                'error' => 'Not Found',
-                'message' => "ID {$id} olan kullanıcı bulunamadı."
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-
-        // Kullanıcıyı listeden kaldır
-        array_splice($users, $userIndex, 1);
-
-        // users.json dosyasına kaydet
-        $file = __DIR__ . '/data/users.json';
-        file_put_contents($file, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-
-        http_response_code(200);
-        echo json_encode([
-            'message' => "ID {$id} olan kullanıcı başarıyla silindi.",
-            'deletedId' => $id,
-            'user' => $deletedUser
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $response = $apiController->delete((int)$id);
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
