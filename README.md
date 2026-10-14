@@ -36,3 +36,18 @@ This application follows the Model-View-Controller (MVC) architectural pattern t
 ## Data Design Documentation
 For detailed data structure, entity definitions, planned SQL schemas, and ER diagram, see:
 👉 **[ddd.md](ddd.md)**
+
+## Database Migrations
+Migrations are located in `migrations/` and manage the database schema for PostgreSQL:
+- `migrations/001_create_users_table.sql`: Schema for `users` table.
+- `migrations/002_create_announcements_table.sql`: Schema for `announcements` table.
+
+To run migrations:
+```bash
+./migrate.sh
+```
+or with PHP:
+```bash
+php migrate.php
+```
+
