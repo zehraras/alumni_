@@ -32,3 +32,7 @@ This application follows the Model-View-Controller (MVC) architectural pattern t
 - **`controllers/` (Controller):** Handles incoming requests, processes user input, interacts with the Model, and returns the appropriate response (JSON or HTML). E.g., `UserController` for web views, `ApiUserController` for API endpoints.
 - **`views/` (View):** Contains the HTML templates and UI components to present data to the user.
 - **`index.php` (Router):** The entry point of the application that routes incoming HTTP requests to the appropriate controllers.
+
+## Data Design Documentation
+For detailed data structure, entity definitions, planned SQL schemas, and ER diagram, see:
+👉 **[ddd.md](ddd.md)**
