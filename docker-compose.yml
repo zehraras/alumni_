@@ -1,15 +1,19 @@
-version: '3.8'
-
 services:
   app:
     image: php:8.2-cli
     container_name: alumni_app
     ports:
-      - "8000:8000"
+      - "${APP_PORT:-8000}:8000"
     volumes:
       - .:/var/www/html
     working_dir: /var/www/html
     command: php -S 0.0.0.0:8000 index.php
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-alumni_db}
+      - DB_USER=${POSTGRES_USER:-alumni_user}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-alumni_password}
     depends_on:
       - db
 
@@ -18,11 +22,11 @@ services:
     container_name: alumni_postgres
     restart: always
     environment:
-      POSTGRES_DB: alumni_db
-      POSTGRES_USER: alumni_user
-      POSTGRES_PASSWORD: alumni_password
+      POSTGRES_DB: ${POSTGRES_DB:-alumni_db}
+      POSTGRES_USER: ${POSTGRES_USER:-alumni_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alumni_password}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
