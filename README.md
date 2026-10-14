@@ -51,3 +51,24 @@ or with PHP:
 php migrate.php
 ```
 
+## Database Factories & Seeders
+Factories and seeders populate the database with realistic sample data:
+- **Factories (`factories/`):**
+  - `factories/UserFactory.php`: Generates fake alumni profiles.
+  - `factories/AnnouncementFactory.php`: Generates fake department announcements.
+- **Seeders (`seeders/`):**
+  - `seeders/UserSeeder.php`: Seeds 10 user records.
+  - `seeders/AnnouncementSeeder.php`: Seeds 5 announcement records.
+  - `seeders/DatabaseSeeder.php`: Master seeder.
+  - `seeders/seed.sql`: Direct SQL seed queries.
+
+To run seeders:
+```bash
+./seed.sh
+```
+or with PHP:
+```bash
+php seed.php
+```
+
+
