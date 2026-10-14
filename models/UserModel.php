@@ -4,8 +4,11 @@ class UserModel {
     private string $dataFile;
 
     public function __construct() {
-        // Path to the JSON file where data is stored
-        $this->dataFile = __DIR__ . '/../data/users.json';
+        // /tmp is inside the container — data is lost on docker compose down (forgetting test)
+        $this->dataFile = '/tmp/alumni_data/users.json';
+        $dir = dirname($this->dataFile);
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+        if (!file_exists($this->dataFile)) file_put_contents($this->dataFile, '[]');
     }
 
     /**

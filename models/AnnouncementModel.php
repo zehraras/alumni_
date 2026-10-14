@@ -4,12 +4,11 @@ class AnnouncementModel {
     private string $dataFile;
 
     public function __construct() {
-        $this->dataFile = __DIR__ . '/../data/announcements.json';
-        if (!file_exists($this->dataFile)) {
-            $dir = dirname($this->dataFile);
-            if (!is_dir($dir)) mkdir($dir, 0777, true);
-            file_put_contents($this->dataFile, '[]');
-        }
+        // /tmp is inside the container — data is lost on docker compose down (forgetting test)
+        $this->dataFile = '/tmp/alumni_data/announcements.json';
+        $dir = dirname($this->dataFile);
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+        if (!file_exists($this->dataFile)) file_put_contents($this->dataFile, '[]');
     }
 
     public function getAll(): array {
