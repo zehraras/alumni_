@@ -1,6 +1,7 @@
 services:
   app:
-    image: php:8.2-cli
+    build: .
+    image: alumni_app:latest
     container_name: alumni_app
     ports:
       - "${APP_PORT:-8000}:8000"
