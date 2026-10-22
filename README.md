@@ -56,11 +56,13 @@ Factories and seeders populate the database with realistic sample data:
 - **Factories (`factories/`):**
   - `factories/UserFactory.php`: Generates fake alumni profiles.
   - `factories/AnnouncementFactory.php`: Generates fake department announcements.
+  - `factories/JobPostingFactory.php`: Generates fake job postings.
 - **Seeders (`seeders/`):**
   - `seeders/UserSeeder.php`: Seeds 10 user records.
   - `seeders/AnnouncementSeeder.php`: Seeds 5 announcement records.
+  - `seeders/JobPostingSeeder.php`: Seeds job postings.
   - `seeders/DatabaseSeeder.php`: Master seeder.
-  - `seeders/seed.sql`: Direct SQL seed queries.
+  - `seeders/seed.sql`: Direct SQL seed queries for all tables.
 
 To run seeders:
 ```bash
@@ -70,5 +72,27 @@ or with PHP:
 ```bash
 php seed.php
 ```
+
+## API Routes & Direct / Nested Endpoints
+
+### Direct Routes
+- `GET/POST /api/users` & `GET/PUT/PATCH/DELETE /api/users/{id}`
+- `GET/POST /api/announcements` & `GET/PUT/PATCH/DELETE /api/announcements/{id}`
+- `GET/POST /api/job-postings` & `GET/PUT/PATCH/DELETE /api/job-postings/{id}`
+- `GET/POST /api/applications` & `GET/PUT/PATCH/DELETE /api/applications/{id}`
+
+### Nested Routes (Resource Relationships)
+- `GET /api/users/{id}/job-postings`: Belirtilen mezunun oluşturduğu iş ilanlarını listeler.
+- `POST /api/users/{id}/job-postings`: Belirtilen mezun adına yeni bir iş ilanı ekler.
+- `GET /api/job-postings/{id}/applications`: Belirli bir iş ilanına yapılan başvuruları listeler.
+- `POST /api/job-postings/{id}/applications`: Belirli bir iş ilanına doğrudan başvuru yapar.
+- `GET /api/users/{id}/applications`: Bir mezunun/kullanıcının yaptığı tüm başvuruları listeler.
+
+### Web UIs
+- `/users`: Mezun listesi ve yönetimi
+- `/announcements`: Bölüm duyuruları
+- `/job-postings`: İş ve staj ilanları (ilan oluşturma & başvuru formu ile)
+- `/applications`: Gelen iş başvuruları listesi ve detayları
+
 
 

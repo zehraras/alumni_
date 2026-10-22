@@ -7,6 +7,8 @@ require_once __DIR__ . '/controllers/AnnouncementController.php';
 require_once __DIR__ . '/controllers/ApiAnnouncementController.php';
 require_once __DIR__ . '/controllers/ApiJobPostingController.php';
 require_once __DIR__ . '/controllers/ApiApplicationController.php';
+require_once __DIR__ . '/controllers/JobPostingController.php';
+require_once __DIR__ . '/controllers/ApplicationController.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -461,6 +463,23 @@ if (preg_match('#^/announcements/(\d+)$#', $path, $matches) && $method === 'GET'
 if (preg_match('#^/announcements/(\d+)/edit$#', $path, $matches) && $method === 'GET') { $announcementController->edit((int)$matches[1]); exit; }
 if (preg_match('#^/announcements/(\d+)/update$#', $path, $matches) && $method === 'POST') { $announcementController->update((int)$matches[1], parseRequestBody()); exit; }
 if (preg_match('#^/announcements/(\d+)/delete$#', $path, $matches) && $method === 'POST') { $announcementController->destroy((int)$matches[1]); exit; }
+
+// -------------------------------------------------------------
+// Job Postings Web Routes (Homework)
+// -------------------------------------------------------------
+$jobPostingController = new JobPostingController($prefix);
+if ($path === '/job-postings' && $method === 'GET') { $jobPostingController->index(); exit; }
+if ($path === '/job-postings/create' && $method === 'GET') { $jobPostingController->create(); exit; }
+if ($path === '/job-postings/create' && $method === 'POST') { $jobPostingController->store(parseRequestBody()); exit; }
+if (preg_match('#^/job-postings/(\d+)$#', $path, $matches) && $method === 'GET') { $jobPostingController->show((int)$matches[1]); exit; }
+if (preg_match('#^/job-postings/(\d+)/apply$#', $path, $matches) && $method === 'POST') { $jobPostingController->apply((int)$matches[1], parseRequestBody()); exit; }
+
+// -------------------------------------------------------------
+// Applications Web Routes (Homework)
+// -------------------------------------------------------------
+$applicationController = new ApplicationController($prefix);
+if ($path === '/applications' && $method === 'GET') { $applicationController->index(); exit; }
+if (preg_match('#^/applications/(\d+)$#', $path, $matches) && $method === 'GET') { $applicationController->show((int)$matches[1]); exit; }
 
 
 // -------------------------------------------------------------

@@ -143,6 +143,8 @@ $aboutActive = $activePage === 'about' ? 'class="active"' : '';
             <a href="<?= htmlspecialchars($homeUrl) ?>" <?= $homeActive ?>>Ana Sayfa</a>
             <a href="<?= htmlspecialchars($usersUrl) ?>" <?= $usersActive ?>>Kullanıcılar</a>
             <a href="<?= htmlspecialchars($prefix) ?>/announcements" <?= ($activePage === 'announcements') ? 'class="active"' : '' ?>>Duyurular</a>
+            <a href="<?= htmlspecialchars($prefix) ?>/job-postings" <?= ($activePage === 'job_postings') ? 'class="active"' : '' ?>>İş İlanları</a>
+            <a href="<?= htmlspecialchars($prefix) ?>/applications" <?= ($activePage === 'applications') ? 'class="active"' : '' ?>>Başvurular</a>
             <a href="<?= htmlspecialchars($aboutUrl) ?>" <?= $aboutActive ?>>Hakkında</a>
         </nav>
     </header>
