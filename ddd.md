@@ -65,19 +65,68 @@ CREATE TABLE announcements (
 
 ---
 
+### 3. Job Posting (İş İlanı)
+
+Mezunların veya bölümün paylaştığı iş ve staj ilanlarını tutan varlık. `users` tablosu ile ilişkilidir (`user_id`).
+
+| Alan | Tip | Açıklama | Zorunlu |
+|------|-----|----------|---------|
+| `id` | INTEGER | Benzersiz iş ilanı kimliği (Primary Key) | ✅ |
+| `user_id` | INTEGER | İlanı oluşturan mezun (Foreign Key -> users.id) | ❌ |
+| `title` | VARCHAR(255) | İlan başlığı / Pozisyon | ✅ |
+| `company` | VARCHAR(255) | Şirket adı | ✅ |
+| `location` | VARCHAR(150) | Çalışma konumu / Şehir | ❌ |
+| `description` | TEXT | İlan detaylı açıklaması | ✅ |
+| `requirements` | TEXT | Aranan nitelikler | ❌ |
+| `salary_range` | VARCHAR(100) | Maaş aralığı | ❌ |
+| `job_type` | VARCHAR(50) | Çalışma biçimi (Tam Zamanlı, Yarı Zamanlı, Staj, Uzaktan) | ❌ |
+| `created_at` | TIMESTAMP | Oluşturulma tarihi | ✅ (otomatik) |
+| `updated_at` | TIMESTAMP | Son güncelleme tarihi | ❌ (otomatik) |
+
+**Planned SQL:**
+```sql
+CREATE TABLE job_postings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    company VARCHAR(255) NOT NULL,
+    location VARCHAR(150),
+    description TEXT NOT NULL,
+    requirements TEXT,
+    salary_range VARCHAR(100),
+    job_type VARCHAR(50) DEFAULT 'Full-time',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+---
+
 ## Entity Relationship Diagram
 
 ```
-┌──────────────────────┐        ┌──────────────────────┐
-│       USERS          │        │   ANNOUNCEMENTS      │
-├──────────────────────┤        ├──────────────────────┤
-│ id (PK)              │        │ id (PK)              │
-│ isim                 │        │ title                │
-│ soyisim              │        │ content              │
-│ bolum                │        │ created_at           │
-│ mezuniyet_yili       │        │ updated_at           │
-│ sehir                │        └──────────────────────┘
-│ pozisyon             │
+┌──────────────────────┐         1 : N         ┌──────────────────────┐
+│       USERS          │──────────────────────<│    JOB_POSTINGS      │
+├──────────────────────┤                       ├──────────────────────┤
+│ id (PK)              │                       │ id (PK)              │
+│ isim                 │                       │ user_id (FK)         │
+│ soyisim              │                       │ title                │
+│ bolum                │                       │ company              │
+│ mezuniyet_yili       │                       │ location             │
+│ sehir                │                       │ description          │
+│ pozisyon             │                       │ requirements         │
+│ created_at           │                       │ salary_range         │
+│ updated_at           │                       │ job_type             │
+└──────────────────────┘                       │ created_at           │
+                                               │ updated_at           │
+                                               └──────────────────────┘
+
+┌──────────────────────┐
+│   ANNOUNCEMENTS      │
+├──────────────────────┤
+│ id (PK)              │
+│ title                │
+│ content              │
 │ created_at           │
 │ updated_at           │
 └──────────────────────┘
