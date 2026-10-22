@@ -5,6 +5,7 @@ require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/ApiUserController.php';
 require_once __DIR__ . '/controllers/AnnouncementController.php';
 require_once __DIR__ . '/controllers/ApiAnnouncementController.php';
+require_once __DIR__ . '/controllers/ApiJobPostingController.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -640,6 +641,62 @@ if (preg_match('#^/api/announcements/(\d+)$#', $path, $matches)) {
         exit;
     }
 }
+
+// -------------------------------------------------------------
+// Job Postings API Routes (Direct & Nested)
+// -------------------------------------------------------------
+
+// Nested Route: /api/users/{user_id}/job-postings
+if (preg_match('#^/api/users/(\d+)/job-postings$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $userId = (int)$matches[1];
+    $apiJobPostingController = new ApiJobPostingController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiJobPostingController->userJobPostings($userId), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'POST') {
+        echo json_encode($apiJobPostingController->createUserJobPosting($userId, parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Direct Route: /api/job-postings
+if ($path === '/api/job-postings') {
+    header('Content-Type: application/json; charset=utf-8');
+    $apiJobPostingController = new ApiJobPostingController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiJobPostingController->index(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'POST') {
+        echo json_encode($apiJobPostingController->create(parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Direct Route: /api/job-postings/{id}
+if (preg_match('#^/api/job-postings/(\d+)$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $id = (int)$matches[1];
+    $apiJobPostingController = new ApiJobPostingController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiJobPostingController->show($id), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'PUT' || $method === 'PATCH') {
+        echo json_encode($apiJobPostingController->update($id, parseRequestBody(), $method === 'PATCH'), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'DELETE') {
+        echo json_encode($apiJobPostingController->delete($id), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 
 // -------------------------------------------------------------
 // Week 02 - Step 6: GET /about -> Temporary about page
