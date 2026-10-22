@@ -6,6 +6,7 @@ require_once __DIR__ . '/controllers/ApiUserController.php';
 require_once __DIR__ . '/controllers/AnnouncementController.php';
 require_once __DIR__ . '/controllers/ApiAnnouncementController.php';
 require_once __DIR__ . '/controllers/ApiJobPostingController.php';
+require_once __DIR__ . '/controllers/ApiApplicationController.php';
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -696,6 +697,74 @@ if (preg_match('#^/api/job-postings/(\d+)$#', $path, $matches)) {
         exit;
     }
 }
+
+// -------------------------------------------------------------
+// Applications API Routes (Direct & Nested)
+// -------------------------------------------------------------
+
+// Nested Route: /api/job-postings/{job_id}/applications
+if (preg_match('#^/api/job-postings/(\d+)/applications$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $jobId = (int)$matches[1];
+    $apiApplicationController = new ApiApplicationController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiApplicationController->jobPostingApplications($jobId), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'POST') {
+        echo json_encode($apiApplicationController->createJobPostingApplication($jobId, parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Nested Route: /api/users/{user_id}/applications
+if (preg_match('#^/api/users/(\d+)/applications$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $userId = (int)$matches[1];
+    $apiApplicationController = new ApiApplicationController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiApplicationController->userApplications($userId), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Direct Route: /api/applications
+if ($path === '/api/applications') {
+    header('Content-Type: application/json; charset=utf-8');
+    $apiApplicationController = new ApiApplicationController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiApplicationController->index(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'POST') {
+        echo json_encode($apiApplicationController->create(parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
+// Direct Route: /api/applications/{id}
+if (preg_match('#^/api/applications/(\d+)$#', $path, $matches)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $id = (int)$matches[1];
+    $apiApplicationController = new ApiApplicationController();
+
+    if ($method === 'GET') {
+        echo json_encode($apiApplicationController->show($id), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'PUT' || $method === 'PATCH') {
+        echo json_encode($apiApplicationController->update($id, parseRequestBody(), $method === 'PATCH'), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($method === 'DELETE') {
+        echo json_encode($apiApplicationController->delete($id), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
+
 
 
 // -------------------------------------------------------------

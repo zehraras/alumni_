@@ -102,24 +102,61 @@ CREATE TABLE job_postings (
 
 ---
 
+### 4. Application (İş Başvurusu)
+
+Bir mezunun veya adayın belirli bir iş ilanına yaptığı başvuruyu temsil eden varlık. `job_postings` tablosuna ve opsiyonel olarak `users` tablosuna bağlıdır.
+
+| Alan | Tip | Açıklama | Zorunlu |
+|------|-----|----------|---------|
+| `id` | INTEGER | Benzersiz başvuru kimliği (Primary Key) | ✅ |
+| `job_posting_id` | INTEGER | Başvurulan iş ilanı (Foreign Key -> job_postings.id) | ✅ |
+| `user_id` | INTEGER | Başvuran mezun / kullanıcı (Foreign Key -> users.id) | ❌ |
+| `applicant_name` | VARCHAR(150) | Başvuranın adı soyadı | ✅ |
+| `applicant_email` | VARCHAR(150) | İletişim e-posta adresi | ✅ |
+| `resume_url` | VARCHAR(255) | Özgeçmiş bağlantısı (CV linki) | ❌ |
+| `cover_letter` | TEXT | Ön yazı / Açıklama metni | ❌ |
+| `status` | VARCHAR(50) | Başvuru durumu (Pending, Reviewed, Accepted, Rejected) | ❌ |
+| `created_at` | TIMESTAMP | Başvuru tarihi | ✅ (otomatik) |
+| `updated_at` | TIMESTAMP | Son güncelleme tarihi | ❌ (otomatik) |
+
+**Planned SQL:**
+```sql
+CREATE TABLE applications (
+    id SERIAL PRIMARY KEY,
+    job_posting_id INTEGER NOT NULL REFERENCES job_postings(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    applicant_name VARCHAR(150) NOT NULL,
+    applicant_email VARCHAR(150) NOT NULL,
+    resume_url VARCHAR(255),
+    cover_letter TEXT,
+    status VARCHAR(50) DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+---
+
 ## Entity Relationship Diagram
 
 ```
-┌──────────────────────┐         1 : N         ┌──────────────────────┐
-│       USERS          │──────────────────────<│    JOB_POSTINGS      │
-├──────────────────────┤                       ├──────────────────────┤
-│ id (PK)              │                       │ id (PK)              │
-│ isim                 │                       │ user_id (FK)         │
-│ soyisim              │                       │ title                │
-│ bolum                │                       │ company              │
-│ mezuniyet_yili       │                       │ location             │
-│ sehir                │                       │ description          │
-│ pozisyon             │                       │ requirements         │
-│ created_at           │                       │ salary_range         │
-│ updated_at           │                       │ job_type             │
-└──────────────────────┘                       │ created_at           │
-                                               │ updated_at           │
-                                               └──────────────────────┘
+┌──────────────────────┐         1 : N         ┌──────────────────────┐         1 : N         ┌──────────────────────┐
+│       USERS          │──────────────────────<│    JOB_POSTINGS      │──────────────────────<│    APPLICATIONS      │
+├──────────────────────┤                       ├──────────────────────┤                       ├──────────────────────┤
+│ id (PK)              │                       │ id (PK)              │                       │ id (PK)              │
+│ isim                 │                       │ user_id (FK)         │                       │ job_posting_id (FK)  │
+│ soyisim              │                       │ title                │                       │ user_id (FK)         │
+│ bolum                │                       │ company              │                       │ applicant_name       │
+│ mezuniyet_yili       │                       │ location             │                       │ applicant_email      │
+│ sehir                │                       │ description          │                       │ resume_url           │
+│ pozisyon             │                       │ requirements         │                       │ cover_letter         │
+│ created_at           │                       │ salary_range         │                       │ status               │
+│ updated_at           │                       │ job_type             │                       │ created_at           │
+└──────────────────────┘                       │ created_at           │                       │ updated_at           │
+          │                                    │ updated_at           │                       └──────────────────────┘
+          │                                    └──────────────────────┘                                   │
+          │                                                                                               │
+          └─────────────────────────────────────────────── 1 : N ─────────────────────────────────────────┘
 
 ┌──────────────────────┐
 │   ANNOUNCEMENTS      │
