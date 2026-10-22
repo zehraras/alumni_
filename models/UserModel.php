@@ -204,6 +204,22 @@ class UserModel {
         return false;
     }
 
+    /**
+     * RELATIONSHIP: Get all job postings posted by this user
+     */
+    public function getJobPostings(int $userId): array {
+        if ($this->db) {
+            try {
+                $stmt = $this->db->prepare("SELECT * FROM job_postings WHERE user_id = :user_id ORDER BY id DESC");
+                $stmt->execute([':user_id' => $userId]);
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                error_log("DB UserModel getJobPostings error: " . $e->getMessage());
+            }
+        }
+        return [];
+    }
+
     private function saveUsers(array $users): void {
         file_put_contents($this->dataFile, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
