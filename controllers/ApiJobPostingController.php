@@ -37,18 +37,32 @@ class ApiJobPostingController {
      * DIRECT ROUTE: POST /api/job-postings
      */
     public function create(array $data) {
-        if (!$data || !is_array($data) || empty($data['title']) || empty($data['company'])) {
-            http_response_code(400);
-            return ['error' => 'Geçersiz veri. Başlık (title) ve şirket (company) alanları zorunludur.'];
+        $errors = [];
+
+        if (empty($data['title']) || trim($data['title']) === '') {
+            $errors['title'] = 'Title is required.';
+        } elseif (mb_strlen(trim($data['title'])) > 120) {
+            $errors['title'] = 'Title cannot exceed 120 characters.';
         }
 
-        // Validate user_id if provided
+        if (empty($data['company']) || trim($data['company']) === '') {
+            $errors['company'] = 'Company is required.';
+        }
+
         if (!empty($data['user_id'])) {
             $user = $this->userModel->getUserById((int)$data['user_id']);
             if (!$user) {
-                http_response_code(404);
-                return ['error' => 'Belirtilen kullanıcı (user_id) bulunamadı.'];
+                $errors['user_id'] = 'Specified user (user_id) does not exist.';
             }
+        }
+
+        if (!empty($errors)) {
+            http_response_code(422);
+            return [
+                'error' => 'Validation Failed',
+                'reason' => 'Request body contains invalid or missing required fields.',
+                'errors' => $errors
+            ];
         }
 
         http_response_code(201);
@@ -114,12 +128,30 @@ class ApiJobPostingController {
         $user = $this->userModel->getUserById($userId);
         if (!$user) {
             http_response_code(404);
-            return ['error' => 'Kullanıcı bulunamadı.'];
+            return [
+                'error' => 'Not Found',
+                'reason' => "User with ID $userId does not exist."
+            ];
         }
 
-        if (!$data || !is_array($data) || empty($data['title']) || empty($data['company'])) {
-            http_response_code(400);
-            return ['error' => 'Geçersiz veri. Başlık (title) ve şirket (company) alanları zorunludur.'];
+        $errors = [];
+        if (empty($data['title']) || trim($data['title']) === '') {
+            $errors['title'] = 'Title is required.';
+        } elseif (mb_strlen(trim($data['title'])) > 120) {
+            $errors['title'] = 'Title cannot exceed 120 characters.';
+        }
+
+        if (empty($data['company']) || trim($data['company']) === '') {
+            $errors['company'] = 'Company is required.';
+        }
+
+        if (!empty($errors)) {
+            http_response_code(422);
+            return [
+                'error' => 'Validation Failed',
+                'reason' => 'Request body contains invalid or missing required fields.',
+                'errors' => $errors
+            ];
         }
 
         $data['user_id'] = $userId;

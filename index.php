@@ -9,6 +9,18 @@ require_once __DIR__ . '/controllers/ApiJobPostingController.php';
 require_once __DIR__ . '/controllers/ApiApplicationController.php';
 require_once __DIR__ . '/controllers/JobPostingController.php';
 require_once __DIR__ . '/controllers/ApplicationController.php';
+require_once __DIR__ . '/middlewares/LoggerMiddleware.php';
+require_once __DIR__ . '/middlewares/GuardianMiddleware.php';
+
+// Step 5 & 6: 5xx Guardian & error logger registration
+GuardianMiddleware::register();
+
+// Step 3: Logger Middleware - logs every request on terminal upon completion
+$requestLogger = new LoggerMiddleware();
+register_shutdown_function(function() use ($requestLogger) {
+    $code = http_response_code() ?: 200;
+    $requestLogger->log($code);
+});
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -856,15 +868,14 @@ if (preg_match('#^/sum/([^/]+)/([^/]+)$#', $path, $matches)) {
 }
 
 // -------------------------------------------------------------
-// 404 Fallback
+// Step 5: Test Route for 5xx Guardian
 // -------------------------------------------------------------
-http_response_code(404);
-header('Content-Type: text/html; charset=utf-8');
-$notFoundContent = <<<HTML
-    <div class="card" style="text-align: center;">
-        <h1 style="color: #ef4444;">404 Not Found</h1>
-        <p>The requested route does not exist.</p>
-        <a href="{$prefix}/" style="color: var(--primary); text-decoration: none; font-weight: 500;">&larr; Return to Home</a>
-    </div>
-HTML;
-echo renderLayout("404 Not Found", $notFoundContent, $prefix);
+if ($path === '/api/crash-test' || $path === '/crash-test') {
+    throw new RuntimeException("5xx Guardian Test: Simulated internal server error.");
+}
+
+// -------------------------------------------------------------
+// Step 4 & Step 7: 404 Guardian Middleware
+// -------------------------------------------------------------
+GuardianMiddleware::handle404($path, "The requested route '$path' does not exist.");
+

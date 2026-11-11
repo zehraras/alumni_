@@ -13,5 +13,7 @@ As discussed in Week 01 ("Decide first. Code later."):
 ## How Antigravity is Utilized
 - **Architecture & Scaffolding:** Guiding directory structure, Docker environment setup, and database orchestration.
 - **Routing & Backend Logic:** Assisting in creating efficient request routers and endpoint handlers in PHP.
-- **Verification & Debugging:** Verifying container readiness, route parsing, and running automated/manual checks.
-- **Documentation:** Keeping README and project logs synchronized with classroom requirements.
+- **Middleware & Guardians:** Implementing Logger Middleware, 404 Guardian, 5xx Guardian, and structured error logging.
+- **Verification & Debugging:** Verifying container readiness, route parsing, testing invalid Postman requests, and running automated/manual checks.
+- **Documentation:** Keeping README, ddd.md, and project logs synchronized with classroom requirements.
+

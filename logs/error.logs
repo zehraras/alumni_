@@ -1,0 +1,5 @@
+# Alumni Management System - Error Log File
+# Generated automatically by GuardianMiddleware (5xx Guardian & 404 Guardian)
+[2026-11-11 17:31:40] 404 GET /api/bilinmeyen-rota | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/api/bilinmeyen-rota' does not exist. | File: :0
+[2026-11-11 17:34:14] 404 GET /gecersiz-sayfa | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/gecersiz-sayfa' does not exist. | File: :0
+[2026-11-11 17:35:12] 500 GET /api/crash-test | IP: 192.168.65.1 | Message: 5xx Guardian Test: Simulated internal server error. | File: /var/www/html/index.php:874

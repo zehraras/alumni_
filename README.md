@@ -94,5 +94,46 @@ php seed.php
 - `/job-postings`: İş ve staj ilanları (ilan oluşturma & başvuru formu ile)
 - `/applications`: Gelen iş başvuruları listesi ve detayları
 
+## Middlewares & Validation Guardians
+
+### 1. Request Validation (Postman Invalid Requests)
+API isteklerinde gelen veriler katı kurallarla doğrulanır:
+- **`JobPosting` Kuralları:**
+  - `title`: Zorunlu (required), maksimum 120 karakter (max 120 chars).
+  - `company`: Zorunlu (required).
+  - `location` (city): Opsiyonel (optional).
+  - `description`: Opsiyonel (optional).
+  - İhlal durumunda HTTP `422 Unprocessable Entity` durum koduyla detaylı hata döner.
+
+### 2. Logger Middleware (`middlewares/LoggerMiddleware.php`)
+Tüm HTTP isteklerini gerçek zamanlı olarak terminale loglar.
+- **Format:** `time method route res.type duration`
+- **Örnek Çıktı:**
+  ```text
+  [10:20:30] POST   /api/job-postings              201 18ms
+  [10:21:15] GET    /api/users                     200 12ms
+  ```
+
+### 3. 404 Guardian Middleware (`middlewares/GuardianMiddleware.php`)
+- Geçersiz veya bulunamayan bir uç noktaya yapılan isteklerde `404 Not Found` yanıtı ve detaylı bir açıklama (`reason`) döner.
+- **API İstekleri:** JSON formatında hata ve sebep nesnesi:
+  ```json
+  {
+      "status": 404,
+      "error": "Not Found",
+      "reason": "The requested route '/api/invalid' does not exist.",
+      "path": "/api/invalid"
+  }
+  ```
+- **Web İstekleri:** Kullanıcı dostu şık Generic 404 HTML hata sayfası (`views/errors/404.php`).
+
+### 4. 5xx Guardian Middleware
+- Beklenmedik sunucu hatalarını (Unhandled Exceptions & Fatal Errors) yakalar ve kullanıcıya güvenli `500 Internal Server Error` yanıtı döner.
+- Hatanın sistem çökmelerine yol açmasını engeller.
+
+### 5. Error Logs (`logs/error.logs`)
+- Tüm 404 rota hataları ve 5xx sunucu hataları zaman damgası, istek metodu, IP ve dosya/satır bilgisiyle birlikte `logs/error.logs` dosyasına kalıcı olarak kaydedilir.
+
+
 
 

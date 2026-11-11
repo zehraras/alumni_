@@ -69,29 +69,35 @@ CREATE TABLE announcements (
 
 Mezunların veya bölümün paylaştığı iş ve staj ilanlarını tutan varlık. `users` tablosu ile ilişkilidir (`user_id`).
 
-| Alan | Tip | Açıklama | Zorunlu |
-|------|-----|----------|---------|
-| `id` | INTEGER | Benzersiz iş ilanı kimliği (Primary Key) | ✅ |
-| `user_id` | INTEGER | İlanı oluşturan mezun (Foreign Key -> users.id) | ❌ |
-| `title` | VARCHAR(255) | İlan başlığı / Pozisyon | ✅ |
-| `company` | VARCHAR(255) | Şirket adı | ✅ |
-| `location` | VARCHAR(150) | Çalışma konumu / Şehir | ❌ |
-| `description` | TEXT | İlan detaylı açıklaması | ✅ |
-| `requirements` | TEXT | Aranan nitelikler | ❌ |
-| `salary_range` | VARCHAR(100) | Maaş aralığı | ❌ |
-| `job_type` | VARCHAR(50) | Çalışma biçimi (Tam Zamanlı, Yarı Zamanlı, Staj, Uzaktan) | ❌ |
+| Alan | Tip | Açıklama | Zorunlu / Kural |
+|------|-----|----------|-----------------|
+| `id` | INTEGER | Benzersiz iş ilanı kimliği (Primary Key) | ✅ Otomatik |
+| `user_id` | INTEGER | İlanı oluşturan mezun (Foreign Key -> users.id) | ❌ Opsiyonel |
+| `title` | VARCHAR(120) | İlan başlığı / Pozisyon | ✅ **Zorunlu**, Maksimum 120 karakter |
+| `company` | VARCHAR(255) | Şirket adı | ✅ **Zorunlu** |
+| `location` | VARCHAR(150) | Çalışma konumu / Şehir (City) | ❌ **Opsiyonel** |
+| `description` | TEXT | İlan detaylı açıklaması | ❌ **Opsiyonel** |
+| `requirements` | TEXT | Aranan nitelikler | ❌ Opsiyonel |
+| `salary_range` | VARCHAR(100) | Maaş aralığı | ❌ Opsiyonel |
+| `job_type` | VARCHAR(50) | Çalışma biçimi (Tam Zamanlı, Yarı Zamanlı, Staj, Uzaktan) | ❌ Opsiyonel |
 | `created_at` | TIMESTAMP | Oluşturulma tarihi | ✅ (otomatik) |
 | `updated_at` | TIMESTAMP | Son güncelleme tarihi | ❌ (otomatik) |
+
+**Validation Rules (Doğrulama Kuralları):**
+- `title`: Zorunlu (required), en fazla 120 karakter (max 120 chars).
+- `company`: Zorunlu (required).
+- `location` (city): Opsiyonel (optional).
+- `description`: Opsiyonel (optional).
 
 **Planned SQL:**
 ```sql
 CREATE TABLE job_postings (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(120) NOT NULL,
     company VARCHAR(255) NOT NULL,
     location VARCHAR(150),
-    description TEXT NOT NULL,
+    description TEXT,
     requirements TEXT,
     salary_range VARCHAR(100),
     job_type VARCHAR(50) DEFAULT 'Full-time',
