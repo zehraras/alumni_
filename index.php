@@ -351,61 +351,114 @@ if ($path === '/') {
     }
 
     $userModel = new UserModel();
-    $users = $userModel->getAllUsers();
-    $userCount = count($users);
+    $announcementModel = new AnnouncementModel();
+    $jobPostingModel = new JobPostingModel();
+    $applicationModel = new ApplicationModel();
+
+    $userCount = count($userModel->getAllUsers());
+    $announcementCount = count($announcementModel->getAll());
+    $jobCount = count($jobPostingModel->getAll());
+    $appCount = count($applicationModel->getAll());
 
     header('Content-Type: text/html; charset=utf-8');
     $content = <<<HTML
-        <div class="card">
-            <span class="badge">● Status: ok</span>
-            <span class="badge badge-blue">👥 Kayıtlı Mezun: {$userCount}</span>
-            <h1>🎓 Alumni Management System</h1>
-            <p>Mezun Yönetim ve Takip Sistemi geliştirme ortamına hoş geldiniz. Aşağıdaki kartlardan arayüzü ve API servislerini test edebilirsiniz.</p>
-            
-            <div style="margin-top: 1.5rem; padding: 1.25rem; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <h3 style="color: #1e40af; margin-bottom: 0.5rem;">🌟 Yeni Özellik: Arayüzden Kullanıcıları Görün ve Ekleyin!</h3>
-                <p style="color: #1e3a8a; margin-bottom: 1rem;">Postman'den veya tarayıcıdan eklenen tüm mezunları doğrudan web sayfasında görebilirsiniz.</p>
-                <a href="{$prefix}/users" class="btn" style="text-decoration: none; display: inline-block;">👉 Users Sayfasına Git</a>
+        <!-- Hero Section -->
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%); color: white; padding: 3rem 2.5rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);">
+            <div style="max-width: 650px;">
+                <span style="display: inline-block; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">
+                    🎓 Üniversite Mezunları Ağı
+                </span>
+                <h1 style="font-size: 2.25rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; color: #ffffff;">
+                    Alumni Management System
+                </h1>
+                <p style="font-size: 1.05rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.5rem;">
+                    Mezunlarımız arasındaki bağı güçlendiren, kariyer fırsatlarını buluşturan ve üniversite ekosistemini canlı tutan yeni nesil mezun yönetim platformu.
+                </p>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <a href="{$prefix}/users" style="background: #ffffff; color: #1e40af; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">👥 Mezunları Keşfet</a>
+                    <a href="{$prefix}/job-postings" style="background: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none;">💼 İş İlanları</a>
+                    <a href="{$prefix}/announcements" style="background: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none;">📢 Duyurular</a>
+                </div>
             </div>
+        </div>
 
-            <hr style="border: none; border-top: 1px solid var(--border); margin: 2rem 0;">
-            
-            <h3>Aktif Sistem Rotaları</h3>
+        <!-- Live Statistics Counter Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+            <div class="card" style="margin-bottom: 0; padding: 1.5rem; border-top: 4px solid #2563eb;">
+                <div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Kayıtlı Mezun</div>
+                <div style="font-size: 2.25rem; font-weight: 800; color: #1e3a8a; margin: 0.5rem 0;">{$userCount}</div>
+                <div style="font-size: 0.85rem; color: #059669; font-weight: 500;">✓ Aktif ve güncel profil</div>
+            </div>
+            <div class="card" style="margin-bottom: 0; padding: 1.5rem; border-top: 4px solid #16a34a;">
+                <div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Bölüm Duyuruları</div>
+                <div style="font-size: 2.25rem; font-weight: 800; color: #166534; margin: 0.5rem 0;">{$announcementCount}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Son etkinlikler ve bültenler</div>
+            </div>
+            <div class="card" style="margin-bottom: 0; padding: 1.5rem; border-top: 4px solid #0284c7;">
+                <div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Kariyer Fırsatları</div>
+                <div style="font-size: 2.25rem; font-weight: 800; color: #075985; margin: 0.5rem 0;">{$jobCount}</div>
+                <div style="font-size: 0.85rem; color: #2563eb; font-weight: 500;">İş ve staj pozisyonu</div>
+            </div>
+            <div class="card" style="margin-bottom: 0; padding: 1.5rem; border-top: 4px solid #eab308;">
+                <div style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Aday Başvuruları</div>
+                <div style="font-size: 2.25rem; font-weight: 800; color: #854d0e; margin: 0.5rem 0;">{$appCount}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Değerlendirilen başvuru</div>
+            </div>
+        </div>
+
+        <!-- Quick Modules Overview -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card" style="margin-bottom: 0;">
+                <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">👨‍🎓</div>
+                <h3 style="margin-bottom: 0.5rem;">Mezun Rehberi</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Bölüm mezunlarımızı görüntüleyin, filtreleyin veya yeni bir mezun kartı oluşturun.
+                </p>
+                <a href="{$prefix}/users" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Mezunları Yönet &rarr;</a>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">💼</div>
+                <h3 style="margin-bottom: 0.5rem;">Kariyer & İlanlar</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Şirketlerin açık iş pozisyonlarını inceleyin, doğrudan CV veya portföy bağlantınızla başvurun.
+                </p>
+                <a href="{$prefix}/job-postings" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; background: #0284c7;">İlanları İncele &rarr;</a>
+            </div>
+            <div class="card" style="margin-bottom: 0;">
+                <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">📢</div>
+                <h3 style="margin-bottom: 0.5rem;">Haberler & Duyurular</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Mezunlar derneği etkinlikleri, konferanslar ve gala geceleri hakkında duyuruları takip edin.
+                </p>
+                <a href="{$prefix}/announcements" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; background: #16a34a;">Duyuruları Gör &rarr;</a>
+            </div>
+        </div>
+
+        <!-- API & Docs Helper -->
+        <div class="card">
+            <span class="badge" style="background: #fef3c7; color: #92400e;">⚡ Geliştirici & API Portalı</span>
+            <h3 style="margin-top: 0.5rem; margin-bottom: 0.5rem;">Sistem Servisleri & Rotalar</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Postman veya harici entegrasyonlar için sunulan REST API uç noktaları:</p>
             <div class="routes-grid">
                 <div class="route-item">
-                    <span class="route-method">GET (UI)</span>
-                    <a href="{$prefix}/users" class="route-path">/users</a>
-                    <span class="route-desc">Mezun listesi ve kullanıcı ekleme arayüzü</span>
+                    <span class="route-method">GET (DOCS)</span>
+                    <a href="{$prefix}/api/swagger" class="route-path">/api/swagger</a>
+                    <span class="route-desc">Otomatik API Dokümantasyonu (OpenAPI / Swagger)</span>
                 </div>
                 <div class="route-item">
-                    <span class="route-method">GET (API)</span>
+                    <span class="route-method">GET/POST</span>
+                    <a href="{$prefix}/api/job-postings" class="route-path">/api/job-postings</a>
+                    <span class="route-desc">İş ilanları REST servisi</span>
+                </div>
+                <div class="route-item">
+                    <span class="route-method">GET/POST</span>
+                    <a href="{$prefix}/api/applications" class="route-path">/api/applications</a>
+                    <span class="route-desc">İş başvuruları REST servisi</span>
+                </div>
+                <div class="route-item">
+                    <span class="route-method">GET</span>
                     <a href="{$prefix}/api/health" class="route-path">/api/health</a>
-                    <span class="route-desc">JSON durum kontrolü {"status": "ok"}</span>
-                </div>
-                <div class="route-item" style="border-left: 3px solid #f59e0b;">
-                    <span class="route-method" style="background: #f59e0b; color: white;">GET (DOCS)</span>
-                    <a href="{$prefix}/api/swagger" class="route-path" style="color: #d97706;">/api/swagger</a>
-                    <span class="route-desc"><strong>YENİ:</strong> Otomatik API Dokümantasyonu (Swagger)</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">POST (API)</span>
-                    <a href="{$prefix}/api/users" class="route-path">/api/users</a>
-                    <span class="route-desc">Postman / Form ile mezun kaydetme</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">GET (API)</span>
-                    <a href="{$prefix}/api/users" class="route-path">/api/users</a>
-                    <span class="route-desc">Tüm kullanıcıları JSON olarak alma</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">GET</span>
-                    <a href="{$prefix}/about" class="route-path">/about</a>
-                    <span class="route-desc">Geçici hakkında sayfası</span>
-                </div>
-                <div class="route-item">
-                    <span class="route-method">GET</span>
-                    <a href="{$prefix}/hello/emre" class="route-path">/hello/emre</a>
-                    <span class="route-desc">Selamlama rotası</span>
+                    <span class="route-desc">Sistem sağlık ve durum kontrolü</span>
                 </div>
             </div>
         </div>
