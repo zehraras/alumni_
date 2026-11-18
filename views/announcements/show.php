@@ -1,16 +1,30 @@
+<?php
+$annId = htmlspecialchars($item['id'] ?? '');
+$title = htmlspecialchars($item['title'] ?? $item['başlık'] ?? 'Başlıksız Duyuru');
+$date = htmlspecialchars($item['createdAt'] ?? '-');
+$content = htmlspecialchars($item['content'] ?? $item['içerik'] ?? 'İçerik belirtilmemiş.');
+?>
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-        <div>
-            <span class="badge" style="background:#fef08a; color:#854d0e;">📢 Duyuru Detayı</span>
-            <h1 style="margin-top:0.5rem;"><?= htmlspecialchars($item['title'] ?? $item['başlık'] ?? 'Başlıksız') ?></h1>
-            <small style="color:var(--text-muted);">Tarih: <?= htmlspecialchars($item['createdAt'] ?? '-') ?></small>
-        </div>
-        <a href="<?= htmlspecialchars($prefix) ?>/announcements" class="btn" style="background:var(--text-muted);">&larr; Geri</a>
+    <a href="<?= htmlspecialchars($prefix) ?>/announcements" style="color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 500;">
+        &larr; Tüm Duyurulara Dön
+    </a>
+
+    <div style="margin: 1.25rem 0 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
+        <span class="badge" style="background: #fef3c7; color: #92400e;">📢 Bölüm Duyurusu #<?= $annId ?></span>
+        <h1 style="font-size: 2rem; font-weight: 800; margin: 0.5rem 0 0.25rem;"><?= $title ?></h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">📅 Yayın Tarihi: <?= $date ?></p>
     </div>
-    <div style="padding: 1.5rem; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; white-space: pre-wrap;">
-<?= htmlspecialchars($item['content'] ?? $item['içerik'] ?? 'İçerik yok.') ?>
+
+    <div style="padding: 1.75rem; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; font-size: 1.05rem; line-height: 1.7; white-space: pre-wrap; color: var(--text-main);">
+<?= $content ?>
     </div>
-    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-        <a href="<?= htmlspecialchars($prefix) ?>/announcements/<?= $item['id'] ?>/edit" class="btn" style="background: #eab308;">Düzenle</a>
+
+    <div style="margin-top: 2rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="<?= htmlspecialchars($prefix) ?>/announcements/<?= $annId ?>/edit" class="btn" style="background: #eab308;">
+            ✏️ Duyuruyu Düzenle
+        </a>
+        <form action="<?= htmlspecialchars($prefix) ?>/announcements/<?= $annId ?>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Bu duyuruyu silmek istediğinize emin misiniz?');">
+            <button type="submit" class="btn btn-danger">🗑️ Sil</button>
+        </form>
     </div>
 </div>

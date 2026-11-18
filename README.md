@@ -33,9 +33,12 @@ This application follows the Model-View-Controller (MVC) architectural pattern t
 - **`views/` (View):** Contains the HTML templates and UI components to present data to the user.
 - **`index.php` (Router):** The entry point of the application that routes incoming HTTP requests to the appropriate controllers.
 
-## Data Design Documentation
-For detailed data structure, entity definitions, planned SQL schemas, and ER diagram, see:
-👉 **[ddd.md](ddd.md)**
+## Documentation & Architecture Guides
+- 📄 **Data Design Documentation:** 👉 **[ddd.md](ddd.md)** (Varlıklar, SQL şemaları, ERD)
+- 🎨 **Brand Identity & Guidelines:** 👉 **[brand.md](brand.md)** (Marka kimliği, misyon, renk paleti, tipografi, ton)
+- 📐 **Design System & UI Specs:** 👉 **[DESIGN.MD](DESIGN.MD)** (Refero.design & Awesome-design-md tabanlı UI kütüphanesi ve grid)
+- 🤖 **AI Assistant Usage:** 👉 **[AGENTS.md](AGENTS.md)** (Antigravity asistan kullanım kayıtları)
+
 
 ## Database Migrations
 Migrations are located in `migrations/` and manage the database schema for PostgreSQL:

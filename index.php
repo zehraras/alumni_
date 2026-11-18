@@ -857,24 +857,50 @@ if (preg_match('#^/api/applications/(\d+)$#', $path, $matches)) {
 if ($path === '/about') {
     header('Content-Type: text/html; charset=utf-8');
     $content = <<<HTML
-        <div class="card">
-            <span class="badge">ℹ️ Temporary About Page</span>
-            <h1>About Alumni System</h1>
-            <p>The Alumni Management System is designed to track graduates, organize university events, and maintain strong connections between alumni and their alma mater.</p>
-            
-            <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
-            
-            <h3 style="margin-bottom: 0.75rem;">Project Specifications</h3>
-            <ul style="margin-left: 1.5rem; color: var(--text-muted); line-height: 2;">
-                <li><strong>Backend:</strong> PHP 8.2 (CLI Built-in Web Server)</li>
-                <li><strong>Database:</strong> PostgreSQL 15</li>
-                <li><strong>Deployment:</strong> Single-command Docker Compose (<code>docker compose up</code>)</li>
-                <li><strong>AI Assistant:</strong> Antigravity (Google DeepMind)</li>
-                <li><strong>Milestone:</strong> Week 03 - API & Endpoints (POST /api/users)</li>
-            </ul>
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                <span class="badge">ℹ️ About the Platform</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Version 2.0.0 &bull; Autumn 2026</span>
+            </div>
 
-            <div style="margin-top: 2rem;">
-                <a href="{$prefix}/" style="display: inline-block; background: var(--primary); color: white; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: 500;">&larr; Back to Main Page</a>
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; letter-spacing: -0.5px;">
+                Alumni Management System
+            </h1>
+            <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.7; max-width: 720px; margin-bottom: 2rem;">
+                A centralized, modern platform built to bridge connections among graduates, university faculty, and industry partners. Track alumni career trajectories, discover collaborative opportunities, and foster an engaged lifelong community.
+            </p>
+
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 2rem 0;">
+
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem;">
+                System Specifications & Architecture
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.35rem;">Runtime</div>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">PHP 8.2 CLI</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Built-in web server with clean routing</div>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.35rem;">Persistence</div>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">PostgreSQL 15</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Relational DB + JSON fallback engine</div>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.35rem;">Infrastructure</div>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">Docker Compose</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Zero-config reproducible containers</div>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem;">
+                    <div style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 0.35rem;">Engineering AI</div>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">Antigravity</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">DeepMind agentic pair programmer</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <a href="{$prefix}/" class="btn btn-secondary">&larr; Return to Dashboard</a>
+                <a href="{$prefix}/users" class="btn">Explore Alumni Directory &rarr;</a>
             </div>
         </div>
 HTML;
