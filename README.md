@@ -137,6 +137,52 @@ Tüm HTTP isteklerini gerçek zamanlı olarak terminale loglar.
 ### 5. Error Logs (`logs/error.logs`)
 - Tüm 404 rota hataları ve 5xx sunucu hataları zaman damgası, istek metodu, IP ve dosya/satır bilgisiyle birlikte `logs/error.logs` dosyasına kalıcı olarak kaydedilir.
 
+---
+
+## Authentication & Role-Based Authorization (RBAC)
+
+Sistem; Web oturumu (PHP Session / Cookie) ve REST API belirteçleri (Bearer Token) ile tam çift yönlü kimlik doğrulama ve rol bazlı erişim denetimi (RBAC) sunar.
+
+### 1. Kullanıcı Rolleri & Yetki Matrisi
+
+| Rol | Tanım | Yetkiler & Sayfa Erişimleri |
+|-----|-------|-----------------------------|
+| `admin` | Sistem Yöneticisi | **Yönetim Paneli (`/admin`)** tam erişim, kullanıcı rolleri değiştirme, kullanıcı silme/düzenleme, sistem istatistikleri, tüm ilan ve duyuru yönetimi. |
+| `alumni` | Üniversite Mezunu | **Profilim (`/profile`)**, kendi iş başvurularını izleme, ilan oluşturma, iş ilanlarına başvurma, mezunlar dizinini görüntüleme. |
+| `student` | Öğrenci | **Profilim (`/profile`)**, staj ve iş ilanlarını inceleme, başvuru yapma, başvuru durumlarını takip etme. |
+| `guest` | Ziyaretçi | Ana sayfa, hakkımızda, kayıt olma (`/register`) ve giriş yapma (`/login`). |
+
+### 2. Kimlik Doğrulama Uç Noktaları
+
+#### Web Arayüzü Rotaları
+- `GET /register` & `POST /register`: Yeni mezun / öğrenci kayıt sayfası ve form işlemi.
+- `GET /login` & `POST /login`: Giriş sayfası, şifre doğrulama (`password_verify`) ve oturum başlatma.
+- `GET /logout`: Güvenli oturum kapatma ve çerez temizleme.
+- `GET /profile` & `POST /profile/update`: Kullanıcıya özel profil sayfası, başvuru takibi ve bilgi güncelleme.
+- `GET /admin`: Yönetici paneli, sistem istatistikleri ve kullanıcı rol manipülasyonu.
+- `POST /admin/users/role`: Kullanıcı rolü değiştirme (`admin`, `alumni`, `student`).
+- `POST /admin/users/delete`: Kullanıcı silme işlemi.
+
+#### REST API Rotaları
+- `POST /api/auth/register`: JSON formatında yeni üyelik oluşturma.
+- `POST /api/auth/login`: E-posta ve şifre ile giriş yaparak API `token` elde etme.
+- `POST /api/auth/logout`: Aktif API tokenını sonlandırma.
+- `GET /api/auth/me`: `Authorization: Bearer <token>` başlığıyla giriş yapan kullanıcının profilini getirme.
+
+### 3. Auth Middleware (`middlewares/AuthMiddleware.php`)
+- **`AuthMiddleware::requireAuth()`**: Yetkisiz web isteklerini `/login` sayfasına yönlendirir; API isteklerinde `401 Unauthorized` JSON yanıtı döner.
+- **`AuthMiddleware::requireRole('admin')`**: Yönetici olmayan kullanıcıların `/admin` paneline erişimini engelleyerek `403 Forbidden` veya güvenli yönlendirme uygular.
+- **Dinamik Navigasyon Menüsü**: Kullanıcının oturum durumuna ve rolüne göre (`Guest`, `Alumni`, `Admin`) menü ve butonları dinamik olarak render eder.
+
+### 4. Test Hesapları ve Giriş Bilgileri
+
+| Hesap Türü | E-posta | Şifre | Rol |
+|------------|---------|-------|-----|
+| **Yönetici (Zehra Aras)** | `zehra@alumni.edu` | `zehra123` | `admin` |
+| **Sistem Yöneticisi** | `admin@alumni.edu` | `admin123` | `admin` |
+| **Mezun Üye** | `ahmet.2@alumni.edu` | `password123` | `alumni` |
+
+
 
 
 

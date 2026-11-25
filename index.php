@@ -11,6 +11,13 @@ require_once __DIR__ . '/controllers/JobPostingController.php';
 require_once __DIR__ . '/controllers/ApplicationController.php';
 require_once __DIR__ . '/middlewares/LoggerMiddleware.php';
 require_once __DIR__ . '/middlewares/GuardianMiddleware.php';
+require_once __DIR__ . '/middlewares/AuthMiddleware.php';
+require_once __DIR__ . '/controllers/AuthController.php';
+require_once __DIR__ . '/controllers/AdminController.php';
+require_once __DIR__ . '/controllers/ProfileController.php';
+
+// Initialize session and authentication state
+AuthMiddleware::init();
 
 // Step 5 & 6: 5xx Guardian & error logger registration
 GuardianMiddleware::register();
@@ -91,252 +98,11 @@ function parseRequestBody() {
     return [];
 }
 
-// Base styling for browser views
+// Base styling for browser views using unified layout.php
 function renderLayout($title, $content, $prefix = '', $activePage = '') {
-    $homeUrl = $prefix . '/';
-    $usersUrl = $prefix . '/users';
-    $aboutUrl = $prefix . '/about';
-    $healthUrl = $prefix . '/api/health';
-
-    $homeActive = $activePage === 'home' ? 'class="active"' : '';
-    $usersActive = $activePage === 'users' ? 'class="active"' : '';
-    $aboutActive = $activePage === 'about' ? 'class="active"' : '';
-
-    return <<<HTML
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{$title} | Alumni System</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --badge-bg: #dcfce7;
-            --badge-text: #15803d;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        nav {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-        nav a {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-weight: 500;
-            transition: color 0.2s;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-        }
-        nav a:hover, nav a.active {
-            color: var(--primary);
-            background: #eff6ff;
-        }
-        main {
-            flex: 1;
-            max-width: 950px;
-            width: 100%;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 1.5rem;
-        }
-        h1 {
-            font-size: 1.85rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-main);
-        }
-        p {
-            color: var(--text-muted);
-            margin-bottom: 1.25rem;
-        }
-        .badge {
-            display: inline-block;
-            background: var(--badge-bg);
-            color: var(--badge-text);
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-        .badge-blue {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        .routes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        .route-item {
-            background: #f1f5f9;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .route-method {
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: var(--primary);
-            text-transform: uppercase;
-        }
-        .route-path {
-            font-family: monospace;
-            font-size: 0.95rem;
-            margin: 0.25rem 0;
-            display: block;
-            color: #0f172a;
-            text-decoration: none;
-        }
-        .route-path:hover {
-            text-decoration: underline;
-        }
-        .route-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        /* Form & Table styles */
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-        .form-group input {
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .form-group input:focus {
-            border-color: var(--primary);
-        }
-        .btn {
-            background: var(--primary);
-            color: white;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            border: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn:hover {
-            background: var(--primary-hover);
-        }
-        .user-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-        .user-table th, .user-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-        .user-table th {
-            background: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        .user-table tr:hover {
-            background: #f1f5f9;
-        }
-        .json-preview {
-            background: #0f172a;
-            color: #38bdf8;
-            padding: 1rem;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            overflow-x: auto;
-            margin-top: 1rem;
-        }
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 1.5rem;
-            text-align: center;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            background: var(--card-bg);
-            margin-top: auto;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <a href="{$homeUrl}" class="logo">🎓 Alumni System</a>
-        <nav>
-            <a href="{$homeUrl}" {$homeActive}>Home</a>
-            <a href="{$usersUrl}" {$usersActive}>Users (Arayüz)</a>
-            <a href="{$aboutUrl}" {$aboutActive}>About</a>
-            <a href="{$healthUrl}" target="_blank">API Health ↗</a>
-        </nav>
-    </header>
-    <main>
-        {$content}
-    </main>
-    <footer>
-        &copy; 2026 Alumni Tracking System &bull; Web Programming Week 03 &bull; Powered by PHP & Docker
-    </footer>
-</body>
-</html>
-HTML;
+    ob_start();
+    require __DIR__ . '/views/layout.php';
+    return ob_get_clean();
 }
 
 // -------------------------------------------------------------
@@ -468,6 +234,61 @@ HTML;
 }
 
 // -------------------------------------------------------------
+// Authentication, Administration & User Profile Controllers
+// -------------------------------------------------------------
+$authController = new AuthController();
+$adminController = new AdminController();
+$profileController = new ProfileController();
+
+// Auth Routes: Register
+if ($path === '/register' && $method === 'GET') {
+    $authController->showRegister($prefix);
+    exit;
+}
+if ($path === '/register' && $method === 'POST') {
+    $authController->register($prefix);
+    exit;
+}
+
+// Auth Routes: Login & Logout
+if ($path === '/login' && $method === 'GET') {
+    $authController->showLogin($prefix);
+    exit;
+}
+if ($path === '/login' && $method === 'POST') {
+    $authController->login($prefix);
+    exit;
+}
+if (($path === '/logout') && ($method === 'GET' || $method === 'POST')) {
+    $authController->logout($prefix);
+    exit;
+}
+
+// Admin Panel Routes (Protected by AuthMiddleware & Admin Role)
+if ($path === '/admin' && $method === 'GET') {
+    $adminController->dashboard($prefix);
+    exit;
+}
+if ($path === '/admin/users/role' && $method === 'POST') {
+    $adminController->updateRole($prefix);
+    exit;
+}
+if ($path === '/admin/users/delete' && $method === 'POST') {
+    $adminController->deleteUser($prefix);
+    exit;
+}
+
+// User-Specific Pages (Protected by AuthMiddleware)
+if ($path === '/profile' && $method === 'GET') {
+    $profileController->showProfile($prefix);
+    exit;
+}
+if ($path === '/profile/update' && $method === 'POST') {
+    $profileController->updateProfile($prefix);
+    exit;
+}
+
+// -------------------------------------------------------------
 // Web Interface Routes (Week 04 - Steps 5 & 6)
 // -------------------------------------------------------------
 $userController = new UserController($prefix);
@@ -546,6 +367,33 @@ $applicationController = new ApplicationController($prefix);
 if ($path === '/applications' && $method === 'GET') { $applicationController->index(); exit; }
 if (preg_match('#^/applications/(\d+)$#', $path, $matches) && $method === 'GET') { $applicationController->show((int)$matches[1]); exit; }
 
+
+// -------------------------------------------------------------
+// Authentication REST API Endpoints
+// -------------------------------------------------------------
+if (($path === '/api/auth/register' || $path === '/api/register') && $method === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($authController->apiRegister(parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (($path === '/api/auth/login' || $path === '/api/login') && $method === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($authController->apiLogin(parseRequestBody()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($path === '/api/auth/logout' && ($method === 'POST' || $method === 'GET')) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($authController->apiLogout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (($path === '/api/auth/me' || $path === '/api/me') && $method === 'GET') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($authController->apiMe(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // -------------------------------------------------------------
 // Week 03 - Step 1: GET /api/health -> JSON

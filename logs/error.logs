@@ -3,3 +3,7 @@
 [2026-11-11 17:31:40] 404 GET /api/bilinmeyen-rota | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/api/bilinmeyen-rota' does not exist. | File: :0
 [2026-11-11 17:34:14] 404 GET /gecersiz-sayfa | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/gecersiz-sayfa' does not exist. | File: :0
 [2026-11-11 17:35:12] 500 GET /api/crash-test | IP: 192.168.65.1 | Message: 5xx Guardian Test: Simulated internal server error. | File: /var/www/html/index.php:874
+[2026-11-18 18:13:10] 404 GET /favicon.ico | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/favicon.ico' does not exist. | File: :0
+[2026-11-18 18:13:10] 404 GET /apple-touch-icon-precomposed.png | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/apple-touch-icon-precomposed.png' does not exist. | File: :0
+[2026-11-18 18:13:10] 404 GET /apple-touch-icon.png | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/apple-touch-icon.png' does not exist. | File: :0
+[2026-11-18 18:13:10] 404 GET /favicon.ico | IP: 192.168.65.1 | Message: Route Not Found: The requested route '/favicon.ico' does not exist. | File: :0

@@ -1,5 +1,11 @@
 <?php
 // Global Layout View
+require_once __DIR__ . '/../middlewares/AuthMiddleware.php';
+
+$authUser = AuthMiddleware::user();
+$authRole = $authUser['role'] ?? null;
+$isAdmin = ($authRole === 'admin');
+
 $homeUrl = $prefix . '/';
 $usersUrl = $prefix . '/users';
 $aboutUrl = $prefix . '/about';
@@ -309,17 +315,48 @@ $aboutActive = $activePage === 'about' ? 'class="active"' : '';
 </head>
 <body>
     <header>
-        <a href="<?= htmlspecialchars($homeUrl) ?>" class="logo">
-            🎓 Alumni<span>System</span>
-        </a>
-        <nav>
-            <a href="<?= htmlspecialchars($homeUrl) ?>" <?= $homeActive ?>>Ana Sayfa</a>
-            <a href="<?= htmlspecialchars($usersUrl) ?>" <?= $usersActive ?>>Mezunlar</a>
-            <a href="<?= htmlspecialchars($prefix) ?>/announcements" <?= ($activePage === 'announcements') ? 'class="active"' : '' ?>>Duyurular</a>
-            <a href="<?= htmlspecialchars($prefix) ?>/job-postings" <?= ($activePage === 'job_postings') ? 'class="active"' : '' ?>>İş İlanları</a>
-            <a href="<?= htmlspecialchars($prefix) ?>/applications" <?= ($activePage === 'applications') ? 'class="active"' : '' ?>>Başvurular</a>
-            <a href="<?= htmlspecialchars($aboutUrl) ?>" <?= $aboutActive ?>>Hakkında</a>
-        </nav>
+        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <a href="<?= htmlspecialchars($homeUrl) ?>" class="logo">
+                🎓 Alumni<span>System</span>
+            </a>
+            <nav>
+                <a href="<?= htmlspecialchars($homeUrl) ?>" <?= $homeActive ?>>Ana Sayfa</a>
+                <a href="<?= htmlspecialchars($usersUrl) ?>" <?= $usersActive ?>>Mezunlar</a>
+                <a href="<?= htmlspecialchars($prefix) ?>/announcements" <?= ($activePage === 'announcements') ? 'class="active"' : '' ?>>Duyurular</a>
+                <a href="<?= htmlspecialchars($prefix) ?>/job-postings" <?= ($activePage === 'job_postings') ? 'class="active"' : '' ?>>İş İlanları</a>
+                <?php if ($authUser): ?>
+                    <a href="<?= htmlspecialchars($prefix) ?>/applications" <?= ($activePage === 'applications') ? 'class="active"' : '' ?>>Başvurular</a>
+                <?php endif; ?>
+                <?php if ($isAdmin): ?>
+                    <a href="<?= htmlspecialchars($prefix) ?>/admin" <?= ($activePage === 'admin') ? 'class="active"' : '' ?> style="color: #991b1b; font-weight: 700;">
+                        🛡️ Yönetim Paneli
+                    </a>
+                <?php endif; ?>
+                <a href="<?= htmlspecialchars($aboutUrl) ?>" <?= $aboutActive ?>>Hakkında</a>
+            </nav>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <?php if ($authUser): ?>
+                <a href="<?= htmlspecialchars($prefix) ?>/profile" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                    <span><?= $isAdmin ? '🛡️' : '👤' ?></span>
+                    <span><?= htmlspecialchars($authUser['isim'] ?? 'Profil') ?></span>
+                    <span class="badge" style="font-size: 0.72rem; padding: 0.15rem 0.45rem; background: <?= $isAdmin ? '#fee2e2; color: #991b1b' : '#e0f2fe; color: #0369a1' ?>;">
+                        <?= htmlspecialchars(ucfirst($authRole ?? 'alumni')) ?>
+                    </span>
+                </a>
+                <a href="<?= htmlspecialchars($prefix) ?>/logout" class="btn btn-secondary" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" title="Oturumu Kapat">
+                    🚪 Çıkış
+                </a>
+            <?php else: ?>
+                <a href="<?= htmlspecialchars($prefix) ?>/login" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">
+                    Giriş Yap
+                </a>
+                <a href="<?= htmlspecialchars($prefix) ?>/register" class="btn" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">
+                    Kayıt Ol
+                </a>
+            <?php endif; ?>
+        </div>
     </header>
 
     <main>
